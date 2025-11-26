@@ -132,11 +132,7 @@ export function useAbortMission() {
 async function syncMissionStatus(
   serviceId: string
 ): Promise<{ status: string; deploymentId?: string }> {
-  const response = await fetch("/api/mission/status", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ serviceId }),
-  })
+  const response = await fetch(`/api/mission/status/${serviceId}`)
 
   const data = await response.json()
 

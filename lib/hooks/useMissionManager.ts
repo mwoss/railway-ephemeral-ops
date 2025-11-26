@@ -24,11 +24,7 @@ export function useMissionManager() {
 
     const interval = setInterval(() => {
       provisioningMissions.forEach((mission) => {
-        fetch("/api/mission/status", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ serviceId: mission.serviceId }),
-        })
+        fetch(`/api/mission/status/${mission.serviceId}`)
           .then((res) => res.json())
           .then((data) => {
             if (data.success && data.status !== mission.status) {
