@@ -2,25 +2,14 @@ import { type NextRequest, NextResponse } from "next/server"
 import { withErrorHandler } from "@/lib/api-error-handler"
 import { logger } from "@/lib/logger"
 import { missionStore } from "@/lib/mission-store"
-import { createRailwayClient, getRailwayProjectId, getRailwayToken } from "@/lib/railway"
+import {
+  createRailwayClient,
+  getRailwayEnvironmentId,
+  getRailwayProjectId,
+  getRailwayToken,
+} from "@/lib/railway"
 import type { Mission, StartMissionRequest } from "@/lib/types"
 import { validateMissionInputs } from "@/lib/validation"
-
-const getEnvironmentIdForService = async (sdk: any, serviceId: string) => {
-  let environmentId: string | undefined
-  let retries = 0
-  const maxRetries = 10
-
-  while (!environmentId && retries < maxRetries) {
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    const serviceDetails = await sdk.GetService({ serviceId })
-    environmentId = serviceDetails.service?.serviceInstances?.edges?.[0]?.node?.environmentId
-    retries++
-    logger.debug({ serviceId, attempt: retries, environmentId }, "Polling for environment ID")
-  }
-
-  return environmentId
-}
 
 async function startMissionHandler(request: NextRequest) {
   const body: StartMissionRequest = await request.json()
@@ -47,7 +36,8 @@ async function startMissionHandler(request: NextRequest) {
   }
 
   const token = getRailwayToken()
-  const projectId = await getRailwayProjectId()
+  const projectId = getRailwayProjectId()
+  const environmentId = getRailwayEnvironmentId()
   const sdk = createRailwayClient(token)
 
   logger.info({ image }, "Creating service")
@@ -64,13 +54,7 @@ async function startMissionHandler(request: NextRequest) {
   const serviceName = createResult.serviceCreate.name || "Unknown"
   logger.info({ serviceId, serviceName }, "Service created")
 
-  const environmentId = await getEnvironmentIdForService(sdk, serviceId)
-  if (!environmentId) {
-    throw new Error("Failed to get environment ID for service after multiple attempts")
-  }
-  logger.info({ serviceId, environmentId }, "Environment ID found")
-
-  // Note: Railway API doesn't support setting start/build command during service creation T_T
+  // Railway API doesn't support setting start/build command during service creation T_T
   // We need to update it after service is created and trigger redeploy
   await sdk.UpdateCommand({
     environmentId,

@@ -1,31 +1,3 @@
-query GetProjects {
-  me {
-    projects {
-      edges {
-        node {
-          id
-          name
-        }
-      }
-    }
-  }
-}
-
-query GetService($serviceId: String!) {
-  service(id: $serviceId) {
-    id
-    name
-    createdAt
-    serviceInstances {
-      edges {
-        node {
-          environmentId
-        }
-      }
-    }
-  }
-}
-
 query GetLatestDeployment($serviceId: String!) {
   service(id: $serviceId) {
     deployments(first: 5) {

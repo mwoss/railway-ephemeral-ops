@@ -23,29 +23,22 @@ export function getRailwayToken(): string {
   return token
 }
 
-export async function getRailwayProjectId(): Promise<string> {
-  const envProjectId = process.env.RAILWAY_PROJECT_ID
+export function getRailwayProjectId(): string {
+  const projectId = process.env.RAILWAY_PROJECT_ID
 
-  if (envProjectId) {
-    return envProjectId
+  if (!projectId) {
+    throw new Error("RAILWAY_PROJECT_ID is not set in environment variables")
   }
 
-  // Auto-detect first project
-  const token = getRailwayToken()
-  const sdk = createRailwayClient(token)
+  return projectId
+}
 
-  const { me } = await sdk.GetProjects()
-  const projects = me?.projects?.edges || []
+export function getRailwayEnvironmentId(): string {
+  const environmentId = process.env.RAILWAY_ENVIRONMENT_ID
 
-  if (projects.length === 0) {
-    throw new Error("No Railway projects found. Please create a project first.")
+  if (!environmentId) {
+    throw new Error("RAILWAY_ENVIRONMENT_ID is not set in environment variables")
   }
 
-  const firstProject = projects[0]?.node
-
-  if (!firstProject?.id) {
-    throw new Error("Could not retrieve project ID")
-  }
-
-  return firstProject.id
+  return environmentId
 }

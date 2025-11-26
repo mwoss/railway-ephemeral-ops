@@ -44,14 +44,17 @@ cp .env.local.example .env.local
 Edit `.env.local` and add your Railway credentials:
 
 ```env
-# Required: Railway API Token
-# Get from: https://railway.app/account/tokens
+# Railway API Token (Required)
+# Get this from: https://railway.app/account/tokens
 RAILWAY_API_TOKEN=your_railway_api_token_here
 
-# Optional: Railway Project ID
-# If not provided, the app will auto-detect your first project
-# Get from: Your Railway project settings URL
+# Railway Project ID (Required)
+# The ID of the project where services will be created
 RAILWAY_PROJECT_ID=your_project_id_here
+
+# Railway Environment ID (Required)
+# The ID of the environment where services will be deployed
+RAILWAY_ENVIRONMENT_ID=your_environment_id_here
 ```
 
 #### 3. Generate GraphQL types
