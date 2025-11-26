@@ -3,16 +3,21 @@ import { withErrorHandler } from "@/lib/api-error-handler"
 import { logger } from "@/lib/logger"
 import { missionStore } from "@/lib/mission-store"
 import { createRailwayClient, getRailwayToken } from "@/lib/railway"
+import type { MissionStatus } from "@/lib/types"
 
-interface SyncStatusResponse {
-  success: boolean
-  status?: string
-  deploymentId?: string
-  shouldUpdate?: boolean
-  error?: string
-}
+type SyncStatusResponse =
+  | {
+      success: true
+      status: string
+      deploymentId: string
+      shouldUpdate: boolean
+    }
+  | {
+      success: false
+      error: string
+    }
 
-function mapRailwayStatusToMissionStatus(railwayStatus: string): string {
+function mapRailwayStatusToMissionStatus(railwayStatus: string): MissionStatus {
   switch (railwayStatus) {
     case "SUCCESS":
       return "active"
@@ -42,34 +47,33 @@ async function syncStatusHandler(
   const deployment = result.service?.deployments?.edges?.[0]?.node
 
   if (!deployment) {
-    return NextResponse.json(
-      { success: false, error: "No deployment found for service" },
-      { status: 404 }
-    )
+    const response: SyncStatusResponse = {
+      success: false,
+      error: "No deployment found for service",
+    }
+    return NextResponse.json(response, { status: 404 })
   }
 
   const railwayStatus = deployment.status
-  const missionStatus = mapRailwayStatusToMissionStatus(railwayStatus)
+  const status = mapRailwayStatusToMissionStatus(railwayStatus)
   const deploymentId = deployment.id
 
-  logger.info({ serviceId, railwayStatus, missionStatus, deploymentId }, "Status synced")
+  logger.info({ serviceId, railwayStatus, missionStatus: status, deploymentId }, "Status synced")
 
   const updated = missionStore.update(serviceId, {
-    status: missionStatus as any,
+    status,
     deploymentId,
   })
   if (updated) {
-    logger.info({ serviceId, status: missionStatus }, "Mission status updated in history")
+    logger.info({ serviceId, status: status }, "Mission status updated in history")
   }
 
-  const response: SyncStatusResponse = {
+  return NextResponse.json({
     success: true,
-    status: missionStatus,
+    status: status,
     deploymentId,
     shouldUpdate: true,
-  }
-
-  return NextResponse.json(response)
+  })
 }
 
 export const GET = withErrorHandler(syncStatusHandler)
