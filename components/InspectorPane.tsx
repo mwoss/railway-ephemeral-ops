@@ -103,10 +103,15 @@ function AbortButton({ onAbort, isAborting }: AbortButtonProps) {
 }
 
 function DeploymentsTab({ mission, canAbort, onAbort, isAborting }: DeploymentsTabProps) {
+  const showTimer =
+    mission.status === "active" ||
+    mission.status === "provisioning" ||
+    mission.status === "injecting"
+
   return (
     <>
       <DeploymentCard mission={mission} />
-      {mission.status === "active" && (
+      {showTimer && (
         <div className="bg-[#14111D] border border-[#33323E] rounded-lg p-4">
           <CountdownTimer startTime={mission.startTime} ttl={mission.ttl} />
         </div>
