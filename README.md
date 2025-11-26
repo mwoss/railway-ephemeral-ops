@@ -28,7 +28,7 @@ Service automates the lifecycle of one-off jobs (called `mission` 🚀 in contex
 #### 1. Clone and install Dependencies
 
 ```bash
-git clone <your-repo-url>
+git clone git@github.com:mwoss/railway-ephemeral-ops.git
 cd railway-ephemeral-ops
 npm install
 ```
@@ -71,6 +71,14 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Testing
+```bash
+npm test              # Run tests
+npm run test:watch    # Watch mode
+```
+
+Tests cover validation logic, mission store, and TTL calculations.
 
 ## Deployment (on Railway)
 1. Create a new project on Railway
