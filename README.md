@@ -105,9 +105,15 @@ moving this to a production-grade utility would require addressing several archi
   * Currently, we `createService` then `updateService`. If the update fails, we leave a "zombie" empty container.
   * Implement a rollback mechanism or wait for an atomic `createWithConfig` mutation (see "Platform Improvements").
 
+* **Reliable cleanup mechanism:**
+  * Transition from purly in-memory background cleanup job, to reliable cleanup via persistent job store.
+
 * **Event-driven updates (reduce polling):**
   * Replace `setInterval` client polling with GraphQL subscriptions for real-time log streaming.
   * Replace status sync mechanism with webhooks from Railway to push state changes (Success/Crash) instantly.
+
+* **Smooth UI via websockets:**
+  * Replace all frontend polling with bi-directional communication using websockets for real-time updates and smooth user experience.
 
 * **Static Asset CDN:**
   * Offload static assets (Next.js build files) to a CDN rather than serving them via the Node.js runtime, ensuring better scalability under load.

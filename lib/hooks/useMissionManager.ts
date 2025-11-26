@@ -67,22 +67,6 @@ export function useMissionManager() {
     }
   }, [missions])
 
-  useEffect(() => {
-    const triggerTTLCheck = async () => {
-      try {
-        await fetch("/api/mission/ttl", { method: "POST" })
-      } catch (error) {
-
-      }
-    }
-
-    void triggerTTLCheck()
-
-    const interval = setInterval(triggerTTLCheck, 30000)
-
-    return () => clearInterval(interval)
-  }, [])
-
   const handleStartMission = async (
     image: string,
     command: string,

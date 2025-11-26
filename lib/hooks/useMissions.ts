@@ -64,7 +64,8 @@ export function useMissionHistory() {
   return useQuery({
     queryKey: missionKeys.history(),
     queryFn: fetchMissionHistory,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 5 * 1000,
+    refetchInterval: 5 * 1000, // Poll every 5 seconds to catch backend watchdog changes
   })
 }
 

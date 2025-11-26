@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals"
+import { afterAll, describe, expect, it } from "@jest/globals"
 import { missionStore } from "@/lib/mission-store"
 import type { Mission } from "@/lib/types"
 
@@ -16,6 +16,10 @@ const createTestMission = (overrides: Partial<Mission> = {}): Mission => ({
 })
 
 describe("MissionStore", () => {
+  afterAll(() => {
+    missionStore.stop()
+  })
+
   it("should store and retrieve missions", () => {
     const mission = createTestMission()
     missionStore.set(mission)
