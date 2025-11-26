@@ -2,9 +2,15 @@ import { logger } from "./logger"
 import { createRailwayClient, getRailwayToken } from "./railway"
 import type { Mission } from "./types"
 
+/*
+ * MissionStore is a singleton class that stores all missions in memory.
+ * Store is also responsible for watching all scheduled missions and checks for expired missions every 10 seconds.
+ * MVP solution for keeping mission history, logs and clearing expired jobs. See README for potential improvements.
+ */
 class MissionStore {
   private store: Map<string, Mission>
   private watchdogInterval: NodeJS.Timeout | null = null
+  private checkIntervalMs: number = 10000 // 10 seconds
 
   constructor() {
     this.store = new Map()
@@ -34,14 +40,7 @@ class MissionStore {
     return updated
   }
 
-  private startWatchdog(): void {
-    this.watchdogInterval = setInterval(() => {
-      this.checkExpiredMissions()
-    }, 10000)
-    logger.info("MissionStore watchdog started")
-  }
-
-  public stop(): void {
+  stop(): void {
     if (this.watchdogInterval) {
       clearInterval(this.watchdogInterval)
       this.watchdogInterval = null
@@ -49,16 +48,23 @@ class MissionStore {
     }
   }
 
+  private startWatchdog(): void {
+    this.watchdogInterval = setInterval(() => {
+      this.checkExpiredMissions()
+    }, this.checkIntervalMs)
+    logger.info("MissionStore watchdog started")
+  }
+
   private checkExpiredMissions(): void {
     const now = Date.now()
     const missions = Array.from(this.store.values())
 
+    // For smaller performance improvements we could keep two separate sets for active and historical missions
     for (const mission of missions) {
       // Only check active or provisioning missions with a TTL set
       if (
         (mission.status === "active" || mission.status === "provisioning") &&
-        mission.ttl !== null &&
-        mission.ttl !== -1
+        mission.ttl !== null
       ) {
         const expiryTime = mission.startTime + mission.ttl * 60 * 1000
         if (now >= expiryTime) {
