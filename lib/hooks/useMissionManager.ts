@@ -2,12 +2,7 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import type { Mission } from "../types"
 import { validateMissionInputs } from "../validation"
-import {
-  useAbortMission,
-  useMissionHistory,
-  useSaveMissionToHistory,
-  useStartMission,
-} from "./useMissions"
+import { useAbortMission, useMissionHistory, useStartMission } from "./useMissions"
 import { useStatusSync } from "./useStatusSync"
 
 export function useMissionManager() {
@@ -16,7 +11,6 @@ export function useMissionManager() {
   const { data: missions = [], isLoading: isLoadingHistory } = useMissionHistory()
   const startMissionMutation = useStartMission()
   const abortMissionMutation = useAbortMission()
-  const saveMissionMutation = useSaveMissionToHistory()
 
   useStatusSync(selectedMission)
 
@@ -30,7 +24,7 @@ export function useMissionManager() {
 
     const interval = setInterval(() => {
       provisioningMissions.forEach((mission) => {
-        fetch("/api/mission/sync-status", {
+        fetch("/api/mission/status", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ serviceId: mission.serviceId }),
@@ -53,19 +47,14 @@ export function useMissionManager() {
     return () => clearInterval(interval)
   }, [missions])
 
-  // Auto-select most recent mission
   useEffect(() => {
-    if (missions.length > 0) {
-      if (!selectedMission) {
-        setSelectedMission(missions[0])
-      } else {
-        const updatedMission = missions.find((m) => m.serviceId === selectedMission.serviceId)
-        if (updatedMission) {
-          setSelectedMission(updatedMission)
-        }
+    if (selectedMission) {
+      const updatedMission = missions.find((m) => m.serviceId === selectedMission.serviceId)
+      if (updatedMission) {
+        setSelectedMission(updatedMission)
       }
     }
-  }, [missions])
+  }, [missions, selectedMission])
 
   const handleStartMission = async (
     image: string,
@@ -97,8 +86,6 @@ export function useMissionManager() {
         deploymentId: null,
         error: error instanceof Error ? error.message : "Unknown error",
       }
-
-      await saveMissionMutation.mutateAsync(errorMission)
       setSelectedMission(errorMission)
       return false
     }

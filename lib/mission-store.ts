@@ -1,6 +1,6 @@
-import type {Mission} from "./types"
-import {createRailwayClient, getRailwayToken} from "./railway"
-import {logger} from "./logger"
+import { logger } from "./logger"
+import { createRailwayClient, getRailwayToken } from "./railway"
+import type { Mission } from "./types"
 
 class MissionStore {
   private store: Map<string, Mission>
@@ -29,7 +29,7 @@ class MissionStore {
       return undefined
     }
 
-    const updated = {...existing, ...updates}
+    const updated = { ...existing, ...updates }
     this.store.set(serviceId, updated)
     return updated
   }
@@ -63,12 +63,12 @@ class MissionStore {
         const expiryTime = mission.startTime + mission.ttl * 60 * 1000
         if (now >= expiryTime) {
           logger.info(
-            {serviceId: mission.serviceId, ttl: mission.ttl},
+            { serviceId: mission.serviceId, ttl: mission.ttl },
             "Mission expired, triggering cleanup"
           )
           this.cleanupMission(mission.serviceId).catch((error) => {
-            logger.error({serviceId: mission.serviceId, err: error}, "Failed to cleanup mission")
-            this.update(mission.serviceId, {status: "cleanup_failed"})
+            logger.error({ serviceId: mission.serviceId, err: error }, "Failed to cleanup mission")
+            this.update(mission.serviceId, { status: "cleanup_failed" })
           })
         }
       }
@@ -79,9 +79,9 @@ class MissionStore {
     const token = getRailwayToken()
     const sdk = createRailwayClient(token)
 
-    logger.info({serviceId}, "Capturing logs before deletion")
+    logger.info({ serviceId }, "Capturing logs before deletion")
 
-    const deploymentResult = await sdk.GetLatestDeployment({serviceId})
+    const deploymentResult = await sdk.GetLatestDeployment({ serviceId })
     const deployment = deploymentResult.service?.deployments?.edges?.[0]?.node
 
     if (deployment?.id) {
@@ -98,14 +98,14 @@ class MissionStore {
         })
       })
       const finalLogsString = logLines.join("\n")
-      this.update(serviceId, {logs: finalLogsString})
+      this.update(serviceId, { logs: finalLogsString })
     }
 
-    this.update(serviceId, {status: "expired"})
-    logger.info({serviceId, status: "expired"}, "Mission marked as expired")
+    this.update(serviceId, { status: "expired" })
+    logger.info({ serviceId, status: "expired" }, "Mission marked as expired")
 
-    await sdk.DeleteService({serviceId})
-    logger.info({serviceId}, "Service deleted successfully")
+    await sdk.DeleteService({ serviceId })
+    logger.info({ serviceId }, "Service deleted successfully")
   }
 }
 

@@ -52,14 +52,6 @@ async function abortMission(serviceId: string): Promise<void> {
   }
 }
 
-async function saveMissionToHistory(mission: Mission): Promise<void> {
-  await fetch("/api/mission/history", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ mission }),
-  })
-}
-
 export function useMissionHistory() {
   return useQuery({
     queryKey: missionKeys.history(),
@@ -137,21 +129,10 @@ export function useAbortMission() {
   })
 }
 
-export function useSaveMissionToHistory() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: saveMissionToHistory,
-    onSuccess: (_, mission) => {
-      queryClient.setQueryData<Mission[]>(missionKeys.history(), (old = []) => [mission, ...old])
-    },
-  })
-}
-
 async function syncMissionStatus(
   serviceId: string
 ): Promise<{ status: string; deploymentId?: string }> {
-  const response = await fetch("/api/mission/sync-status", {
+  const response = await fetch("/api/mission/status", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ serviceId }),
@@ -168,8 +149,6 @@ async function syncMissionStatus(
     deploymentId: data.deploymentId,
   }
 }
-
-// updateMissionInHistory and useUpdateMission removed - backend endpoints now handle history updates
 
 export function useSyncMissionStatus() {
   const queryClient = useQueryClient()
