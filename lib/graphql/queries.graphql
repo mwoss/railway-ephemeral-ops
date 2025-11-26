@@ -1,0 +1,63 @@
+query GetProjects {
+  me {
+    projects {
+      edges {
+        node {
+          id
+          name
+        }
+      }
+    }
+  }
+}
+
+query GetService($serviceId: String!) {
+  service(id: $serviceId) {
+    id
+    name
+    createdAt
+    serviceInstances {
+      edges {
+        node {
+          environmentId
+        }
+      }
+    }
+  }
+}
+
+query GetLatestDeployment($serviceId: String!) {
+  service(id: $serviceId) {
+    deployments(first: 5) {
+      edges {
+        node {
+          id
+          status
+          createdAt
+        }
+      }
+    }
+  }
+}
+
+query GetMissionStatus($serviceId: String!) {
+  service(id: $serviceId) {
+    deployments(first: 1) {
+      edges {
+        node {
+          id
+          status
+          createdAt
+        }
+      }
+    }
+  }
+}
+
+query GetDeploymentLogs($deploymentId: String!, $limit: Int) {
+  deploymentLogs(deploymentId: $deploymentId, limit: $limit) {
+    timestamp
+    message
+    severity
+  }
+}

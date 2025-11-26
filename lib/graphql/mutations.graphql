@@ -1,0 +1,28 @@
+mutation CreateService($projectId: String!, $image: String!) {
+  serviceCreate(input: {
+    projectId: $projectId
+    source: { image: $image }
+  }) {
+    id
+    name
+  }
+}
+
+mutation UpdateCommand($environmentId: String, $serviceId: String!, $command: String!) {
+  serviceInstanceUpdate(
+    environmentId: $environmentId
+    serviceId: $serviceId
+    input: {
+        startCommand: $command,
+        restartPolicyType: NEVER
+    }
+  )
+}
+
+mutation RedeployService($serviceId: String!, $environmentId: String!) {
+  serviceInstanceRedeploy(serviceId: $serviceId, environmentId: $environmentId)
+}
+
+mutation DeleteService($serviceId: String!) {
+  serviceDelete(id: $serviceId)
+}

@@ -1,0 +1,259 @@
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {toast} from 'sonner';
+import type {Mission, StartMissionResponse, AbortMissionResponse} from '@/lib/types';
+
+export const missionKeys = {
+  all: ['missions'] as const,
+  history: () => [...missionKeys.all, 'history'] as const,
+};
+
+async function fetchMissionHistory(): Promise<Mission[]> {
+  const response = await fetch('/api/mission/history');
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.error || 'Failed to fetch mission history');
+  }
+
+  return data.missions || [];
+}
+
+
+async function startMission(params: { image: string; command: string; ttl: number | null }): Promise<Mission> {
+  const response = await fetch('/api/mission/start', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(params),
+  });
+
+  const data: StartMissionResponse = await response.json();
+
+  if (!data.success || !data.mission) {
+    throw new Error(data.error || 'Failed to start mission');
+  }
+
+  await fetch('/api/mission/history', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({mission: data.mission}),
+  });
+
+  return data.mission;
+}
+
+
+async function abortMission(serviceId: string): Promise<void> {
+  const response = await fetch('/api/mission/abort', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({serviceId}),
+  });
+
+  const data: AbortMissionResponse = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.error || 'Failed to abort mission');
+  }
+
+  await fetch('/api/mission/history', {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      serviceId,
+      updates: {status: 'terminated'},
+    }),
+  });
+}
+
+
+async function saveMissionToHistory(mission: Mission): Promise<void> {
+  await fetch('/api/mission/history', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({mission}),
+  });
+}
+
+export function useMissionHistory() {
+  return useQuery({
+    queryKey: missionKeys.history(),
+    queryFn: fetchMissionHistory,
+    staleTime: 30 * 1000, // 30 seconds
+  });
+}
+
+export function useStartMission() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: startMission,
+    onSuccess: (newMission) => {
+      queryClient.setQueryData<Mission[]>(missionKeys.history(), (old = []) => [
+        newMission,
+        ...old,
+      ]);
+
+      toast.success('Mission Launched', {
+        description: `Service ${newMission.serviceName} is now active`,
+      });
+    },
+    onError: (error: any) => {
+      const errorMessage = error?.message || 'Failed to start mission';
+      const errorDetails = error?.details || error?.response?.errors?.[0]?.message;
+
+      toast.error(errorMessage, {
+        description: errorDetails,
+      });
+    },
+  });
+}
+
+export function useAbortMission() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: abortMission,
+    onSuccess: (_, serviceId) => {
+      queryClient.setQueryData<Mission[]>(missionKeys.history(), (old = []) =>
+        old.map((mission) =>
+          mission.serviceId === serviceId
+            ? {...mission, status: 'terminated' as const}
+            : mission
+        )
+      );
+
+      toast.success('Mission Terminated', {
+        description: 'Service has been successfully deleted',
+      });
+    },
+    onError: (error: any, serviceId) => {
+      queryClient.setQueryData<Mission[]>(missionKeys.history(), (old = []) =>
+        old.map((mission) =>
+          mission.serviceId === serviceId
+            ? {...mission, status: 'cleanup_failed' as const}
+            : mission
+        )
+      );
+
+      const errorMessage = error?.message || 'Cleanup Failed';
+      const errorDetails = error?.details;
+      const isRetryable = error?.isRetryable !== false;
+
+      toast.error(errorMessage, {
+        description: errorDetails || 'Failed to delete service. You can retry.',
+        action: isRetryable ? {
+          label: 'Retry',
+          onClick: () => {
+            // Trigger retry by calling the mutation again
+            // This will be handled by the component
+          },
+        } : undefined,
+      });
+    },
+  });
+}
+
+export function useSaveMissionToHistory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: saveMissionToHistory,
+    onSuccess: (_, mission) => {
+      queryClient.setQueryData<Mission[]>(missionKeys.history(), (old = []) => [
+        mission,
+        ...old,
+      ]);
+    },
+  });
+}
+
+async function syncMissionStatus(serviceId: string): Promise<{ status: string; deploymentId?: string }> {
+  const response = await fetch('/api/mission/sync-status', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({serviceId}),
+  });
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.error || 'Failed to sync status');
+  }
+
+  return {
+    status: data.status,
+    deploymentId: data.deploymentId,
+  };
+}
+
+
+async function updateMissionInHistory(params: { serviceId: string; updates: Partial<Mission> }): Promise<void> {
+  const response = await fetch('/api/mission/history', {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(params),
+  });
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.error || 'Failed to update mission');
+  }
+}
+
+export function useUpdateMission() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateMissionInHistory,
+    onSuccess: (_, {serviceId, updates}) => {
+      queryClient.setQueryData<Mission[]>(missionKeys.history(), (old = []) =>
+        old.map((mission) =>
+          mission.serviceId === serviceId
+            ? {...mission, ...updates}
+            : mission
+        )
+      );
+    },
+  });
+}
+
+export function useSyncMissionStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: syncMissionStatus,
+    onSuccess: (result, serviceId) => {
+      const {status, deploymentId} = result;
+
+      queryClient.setQueryData<Mission[]>(missionKeys.history(), (old = []) =>
+        old.map((mission) =>
+          mission.serviceId === serviceId
+            ? {
+              ...mission,
+              status: status as Mission['status'],
+              deploymentId: deploymentId || mission.deploymentId,
+            }
+            : mission
+        )
+      );
+
+      updateMissionInHistory({
+        serviceId,
+        updates: {
+          status: status as Mission['status'],
+          deploymentId: deploymentId || undefined,
+        },
+      }).catch(() => {
+      });
+
+      if (status === 'failed') {
+        toast.error('Launch Failed', {
+          description: 'Container crashed. Check image name and command.',
+        });
+      }
+    },
+    onError: () => {
+    },
+  });
+}

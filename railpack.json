@@ -1,0 +1,10 @@
+{
+  "build": {
+    "command": "npm ci && npm run codegen && npm run build"
+  },
+  "deploy": {
+    "startCommand": "npm start",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 5
+  }
+}
