@@ -10,6 +10,7 @@ type SyncStatusResponse =
       success: true
       status: string
       deploymentId: string
+      timeRemaining: number | null
       shouldUpdate: boolean
     }
   | {
@@ -60,9 +61,27 @@ async function syncStatusHandler(
 
   logger.info({ serviceId, railwayStatus, missionStatus: status, deploymentId }, "Status synced")
 
+  // Get mission to calculate timeRemaining
+  const mission = missionStore.get(serviceId)
+  if (!mission) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Mission not found in store",
+      },
+      { status: 404 }
+    )
+  }
+
+  // Calculate timeRemaining server-side to avoid client/server clock sync issues
+  const timeRemaining = mission.ttl !== null
+    ? Math.max(0, mission.startTime + mission.ttl * 60 * 1000 - Date.now())
+    : null
+
   const updated = missionStore.update(serviceId, {
     status,
     deploymentId,
+    timeRemaining,
   })
 
   if (!updated) {
@@ -81,6 +100,7 @@ async function syncStatusHandler(
     success: true,
     status: status,
     deploymentId,
+    timeRemaining,
     shouldUpdate: true,
   })
 }
