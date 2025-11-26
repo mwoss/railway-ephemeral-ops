@@ -14,7 +14,7 @@ mutation UpdateCommand($environmentId: String, $serviceId: String!, $command: St
 }
 
 mutation RedeployService($serviceId: String!, $environmentId: String!) {
-  serviceInstanceRedeploy(serviceId: $serviceId, environmentId: $environmentId)
+  serviceInstanceDeployV2(serviceId: $serviceId, environmentId: $environmentId)
 }
 
 mutation DeleteService($serviceId: String!) {

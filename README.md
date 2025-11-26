@@ -102,8 +102,9 @@ moving this to a production-grade utility would require addressing several archi
   * Why: To support history retention across deployments, and crash recovery (if the app restarts, state is currently lost).
 
 * **Atomic provisioning (transaction safety):**
-  * Currently, we `createService` then `updateService`. If the update fails, we leave a "zombie" empty container.
+  * Currently, we `createService` then `updateService`, and so on. If the update fails, we leave a "zombie" empty container.
   * Implement a rollback mechanism or wait for an atomic `createWithConfig` mutation (see "Platform Improvements").
+  * Saga pattern with "job" persistence for clearing zombie state 
 
 * **Reliable cleanup mechanism:**
   * Transition from purly in-memory background cleanup job, to reliable cleanup via persistent job store.
@@ -113,7 +114,7 @@ moving this to a production-grade utility would require addressing several archi
   * Replace status sync mechanism with webhooks from Railway to push state changes (Success/Crash) instantly.
 
 * **Smooth UI via websockets:**
-  * Replace all frontend polling with bi-directional communication using websockets for real-time updates and smooth user experience.
+  * Replace all frontend polling with bidirectional communication using websockets for real-time updates and smooth user experience.
 
 * **Static Asset CDN:**
   * Offload static assets (Next.js build files) to a CDN rather than serving them via the Node.js runtime, ensuring better scalability under load.

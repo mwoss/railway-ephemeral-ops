@@ -3,7 +3,7 @@ import { withErrorHandler } from "@/lib/api-error-handler"
 import { logger } from "@/lib/logger"
 import { missionStore } from "@/lib/mission-store"
 import { createRailwayClient, getRailwayProjectId, getRailwayToken } from "@/lib/railway"
-import type { StartMissionRequest } from "@/lib/types"
+import type { Mission, StartMissionRequest } from "@/lib/types"
 import { validateMissionInputs } from "@/lib/validation"
 
 const getEnvironmentIdForService = async (sdk: any, serviceId: string) => {
@@ -62,7 +62,6 @@ async function startMissionHandler(request: NextRequest) {
 
   const serviceId = createResult.serviceCreate.id
   const serviceName = createResult.serviceCreate.name || "Unknown"
-
   logger.info({ serviceId, serviceName }, "Service created")
 
   const environmentId = await getEnvironmentIdForService(sdk, serviceId)
@@ -81,34 +80,22 @@ async function startMissionHandler(request: NextRequest) {
   logger.info({ serviceId }, "Command updated successfully")
 
   // Service update doesn't trigger redeploy, we need to manually trigger it.
-  // Why it needs environment id when serviceCreate mutation doesn't? (wtf)
-  // We also have to wait for few second to be sure the redeploy will be applied.
-  // Most likely it's caused by propagation latency or something like that. Just hire me, so I could fix this whole sercice create API.
-  await new Promise((resolve) => setTimeout(resolve, 5000))
-  const redeployResult = await sdk.RedeployService({
+  // Note: Why it needs environment id when serviceCreate mutation doesn't?
+  const deployment = await sdk.RedeployService({
     serviceId,
     environmentId,
   })
-  logger.info({ serviceId, result: redeployResult }, "Redeploy triggered")
 
-  // OMG. Again, we can't get deployment ID right away after redeploy. Mutation also doesn't return it. Kill me.
-  await new Promise((resolve) => setTimeout(resolve, 2000))
-  const deploymentResult = await sdk.GetLatestDeployment({ serviceId })
-  const allDeployments = deploymentResult.service?.deployments?.edges || []
-  // Get the latest deployment (should be the redeploy)
-  const deploymentId = allDeployments[0]?.node?.id
-  logger.info({ serviceId, deploymentId, ttl }, "Mission started")
-
-  const mission = {
+  const mission: Mission = {
     serviceId,
     serviceName,
-    status: "provisioning" as const,
+    status: "provisioning",
     startTime: Date.now(),
     ttl,
     image,
     command,
     logs: null,
-    deploymentId: deploymentId || null,
+    deploymentId: deployment.serviceInstanceDeployV2,
   }
 
   missionStore.set(mission)
