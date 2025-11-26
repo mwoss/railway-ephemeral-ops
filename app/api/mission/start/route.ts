@@ -76,6 +76,7 @@ async function startMissionHandler(request: NextRequest) {
     status: "provisioning",
     startTime: Date.now(),
     ttl,
+    timeRemaining: ttl !== null ? ttl * 60 * 1000 : null, // Convert TTL minutes to milliseconds
     image,
     command,
     logs: null,

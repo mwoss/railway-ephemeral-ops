@@ -171,7 +171,6 @@ function TTLSelector({ ttl, onTTLChange }: TTLSelectorProps) {
             {option.label}
           </button>
         ))}
-
         <button
           type="button"
           onClick={() => onTTLChange(null)}

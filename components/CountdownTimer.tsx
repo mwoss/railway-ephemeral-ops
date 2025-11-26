@@ -4,8 +4,8 @@ import { Clock, Infinity } from "lucide-react"
 import { useEffect, useState } from "react"
 
 interface CountdownTimerProps {
-  startTime: number
-  ttl: number | null
+  timeRemaining: number | null // milliseconds from server, null for manual mode
+  ttl: number | null // minutes, for display purposes
 }
 
 interface TTLDisplayProps {
@@ -32,38 +32,15 @@ function ManualModeDisplay() {
   )
 }
 
-function LoadingDisplay() {
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 text-slate-300">
-        <Clock className="w-5 h-5" />
-        <span className="font-mono text-sm uppercase tracking-wider">Time Remaining</span>
-      </div>
-
-      <div className="font-mono text-4xl font-bold text-[#73C09B]">--:--</div>
-
-      <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-        <div className="h-full bg-[#73C09B]" style={{ width: "100%" }} />
-      </div>
-    </div>
-  )
-}
-
 function TTLDisplay({ timeRemaining, ttl }: TTLDisplayProps) {
   const minutes = Math.floor(timeRemaining / 60000)
   const seconds = Math.floor((timeRemaining % 60000) / 1000)
   const percentage = (timeRemaining / (ttl * 60 * 1000)) * 100
 
-  const getColorClass = () => {
-    if (percentage > 50) return "text-[#73C09B]"
-    if (percentage > 25) return "text-[#dfaf2a]"
-    return "text-[#b62d2b]"
-  }
-
-  const getProgressBarColor = () => {
-    if (percentage > 50) return "bg-[#73C09B]"
-    if (percentage > 25) return "bg-[#dfaf2a]"
-    return "bg-[#b62d2b]"
+  const getColorClass = (prefix: 'text' | 'bg') => {
+    if (percentage > 50) return `${prefix}-[#73C09B]`
+    if (percentage > 25) return `${prefix}-[#dfaf2a]`
+    return `${prefix}-[#b62d2b]`
   }
 
   return (
@@ -73,13 +50,13 @@ function TTLDisplay({ timeRemaining, ttl }: TTLDisplayProps) {
         <span className="font-mono text-sm uppercase tracking-wider">Time Remaining</span>
       </div>
 
-      <div className={`font-mono text-4xl font-bold ${getColorClass()}`}>
+      <div className={`font-mono text-4xl font-bold ${getColorClass('text')}`}>
         {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
       </div>
 
       <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
         <div
-          className={`h-full transition-all duration-1000 ${getProgressBarColor()}`}
+          className={`h-full transition-all duration-1000 ${getColorClass('bg')}`}
           style={{ width: `${percentage}%` }}
         />
       </div>
@@ -87,35 +64,28 @@ function TTLDisplay({ timeRemaining, ttl }: TTLDisplayProps) {
   )
 }
 
-export function CountdownTimer({ startTime, ttl }: CountdownTimerProps) {
-  const [timeRemaining, setTimeRemaining] = useState<number>(0)
-  const [isMounted, setIsMounted] = useState(false)
+export function CountdownTimer({ timeRemaining: serverTimeRemaining, ttl }: CountdownTimerProps) {
+  const [localTimeRemaining, setLocalTimeRemaining] = useState<number>(serverTimeRemaining ?? 0)
   const isManualMode = ttl === null
 
+  // Sync with server-provided timeRemaining when it changes
   useEffect(() => {
-    setIsMounted(true)
-  }, [])
+    if (serverTimeRemaining !== null) {
+      setLocalTimeRemaining(serverTimeRemaining)
+    }
+  }, [serverTimeRemaining])
 
+  // Decrement locally every second
   useEffect(() => {
-    if (isManualMode || !isMounted) return
+    if (isManualMode) return
 
-    const calculateTimeRemaining = () => {
-      const elapsed = Date.now() - startTime
-      const ttlMs = ttl * 60 * 1000
-      return Math.max(0, ttlMs - elapsed)
-    }
-
-    const updateTimer = () => {
-      setTimeRemaining(calculateTimeRemaining())
-    }
-
-    updateTimer()
-    const interval = setInterval(updateTimer, 1000)
+    const interval = setInterval(() => {
+      setLocalTimeRemaining((prev) => Math.max(0, prev - 1000))
+    }, 1000)
 
     return () => clearInterval(interval)
-  }, [startTime, ttl, isManualMode, isMounted])
+  }, [isManualMode])
 
   if (isManualMode) return <ManualModeDisplay />
-  if (!isMounted) return <LoadingDisplay />
-  return <TTLDisplay timeRemaining={timeRemaining} ttl={ttl} />
+  return <TTLDisplay timeRemaining={localTimeRemaining} ttl={ttl} />
 }

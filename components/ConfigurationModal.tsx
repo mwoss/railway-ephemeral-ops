@@ -13,13 +13,15 @@ export function ConfigurationModal({
   onSubmit,
   isLoading,
 }: ConfigurationModalProps) {
-  if (!isOpen) return null
-
   const handleSubmit = async (image: string, command: string, ttl: number | null) => {
     const success = await onSubmit(image, command, ttl)
     if (success) {
       onClose()
     }
+  }
+
+  if (!isOpen) {
+    return null
   }
 
   return (

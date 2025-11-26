@@ -131,7 +131,7 @@ export function useAbortMission() {
 
 async function syncMissionStatus(
   serviceId: string
-): Promise<{ status: string; deploymentId?: string }> {
+): Promise<{ status: string; deploymentId?: string; timeRemaining: number | null }> {
   const response = await fetch(`/api/mission/status/${serviceId}`)
 
   const data = await response.json()
@@ -143,6 +143,7 @@ async function syncMissionStatus(
   return {
     status: data.status,
     deploymentId: data.deploymentId,
+    timeRemaining: data.timeRemaining,
   }
 }
 
@@ -152,7 +153,7 @@ export function useSyncMissionStatus() {
   return useMutation({
     mutationFn: syncMissionStatus,
     onSuccess: (result, serviceId) => {
-      const { status, deploymentId } = result
+      const { status, deploymentId, timeRemaining } = result
 
       queryClient.setQueryData<Mission[]>(missionKeys.history(), (old = []) =>
         old.map((mission) =>
@@ -161,6 +162,7 @@ export function useSyncMissionStatus() {
                 ...mission,
                 status: status as Mission["status"],
                 deploymentId: deploymentId || mission.deploymentId,
+                timeRemaining,
               }
             : mission
         )

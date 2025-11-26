@@ -8,6 +8,7 @@ const createTestMission = (overrides: Partial<Mission> = {}): Mission => ({
   status: "active",
   startTime: Date.now(),
   ttl: 15,
+  timeRemaining: 15 * 60 * 1000, // 15 minutes in milliseconds
   image: "python:3.9-slim",
   command: 'echo "test"',
   logs: null,

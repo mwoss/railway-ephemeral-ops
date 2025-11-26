@@ -113,7 +113,7 @@ function DeploymentsTab({ mission, canAbort, onAbort, isAborting }: DeploymentsT
       <DeploymentCard mission={mission} />
       {showTimer && (
         <div className="bg-[#14111D] border border-[#33323E] rounded-lg p-4">
-          <CountdownTimer startTime={mission.startTime} ttl={mission.ttl} />
+          <CountdownTimer timeRemaining={mission.timeRemaining} ttl={mission.ttl} />
         </div>
       )}
       {canAbort && <AbortButton onAbort={onAbort} isAborting={isAborting} />}

@@ -76,6 +76,7 @@ export function useMissionManager() {
         status: "error",
         startTime: Date.now(),
         ttl,
+        timeRemaining: null,
         image,
         command,
         logs: null,

@@ -15,6 +15,7 @@ export interface Mission {
   status: MissionStatus
   startTime: number
   ttl: number | null
+  timeRemaining: number | null // milliseconds remaining, null if manual mode
   image: string
   command: string
   logs: string | null
