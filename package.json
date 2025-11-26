@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run codegen:safe && next build",
     "start": "next start",
     "lint": "next lint",
     "codegen": "graphql-codegen --config codegen.ts",
+    "codegen:safe": "npm run codegen || echo 'Skipping codegen, using existing generated files'",
     "test": "jest",
     "test:watch": "jest --watch"
   },
