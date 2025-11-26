@@ -1,90 +1,80 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { withErrorHandler } from "@/lib/api-error-handler"
 import { logger } from "@/lib/logger"
+import { missionStore } from "@/lib/mission-store"
 import { createRailwayClient, getRailwayToken } from "@/lib/railway"
 
-interface MissionTTLCheck {
-  serviceId: string
-  startTime: number
-  ttl: number | null
+interface TTLCheckResult {
+  checked: number
+  expired: number
+  terminated: number
+  failed: number
 }
 
-interface TTLRequest {
-  missions: MissionTTLCheck[]
-}
+async function ttlHandler() {
+  const allMissions = missionStore.getAll()
+  const activeMissions = allMissions.filter(
+    (m) =>
+      (m.status === "active" || m.status === "provisioning" || m.status === "injecting") &&
+      m.ttl !== null &&
+      m.ttl !== undefined
+  )
 
-interface MissionTTLResult {
-  serviceId: string
-  shouldTerminate: boolean
-  terminated?: boolean
-}
+  logger.info({ count: activeMissions.length }, "Checking TTL for active missions")
 
-async function ttlHandler(request: NextRequest) {
-  const body: TTLRequest = await request.json()
-  const { missions } = body
-
-  if (!missions || !Array.isArray(missions) || missions.length === 0) {
-    return NextResponse.json(
-      { success: false, error: "Missing or invalid missions array", results: [] },
-      { status: 400 }
-    )
+  if (activeMissions.length === 0) {
+    return NextResponse.json({
+      success: true,
+      result: {
+        checked: 0,
+        expired: 0,
+        terminated: 0,
+        failed: 0,
+      },
+    })
   }
 
   const token = getRailwayToken()
   const sdk = createRailwayClient(token)
 
-  const results: MissionTTLResult[] = []
+  const result: TTLCheckResult = {
+    checked: activeMissions.length,
+    expired: 0,
+    terminated: 0,
+    failed: 0,
+  }
 
-  for (const mission of missions) {
+  for (const mission of activeMissions) {
     const { serviceId, startTime, ttl } = mission
 
-    if (!serviceId || !startTime || ttl === undefined) {
-      logger.warn({ serviceId }, "Skipping mission with missing fields")
-      continue
-    }
-
-    if (ttl === null) {
-      results.push({
-        serviceId,
-        shouldTerminate: false,
-      })
-      continue
-    }
+    if (!ttl) continue
 
     const elapsed = Date.now() - startTime
     const ttlMs = ttl * 60 * 1000
     const hasExpired = elapsed >= ttlMs
 
-    if (!hasExpired) {
-      results.push({
-        serviceId,
-        shouldTerminate: false,
-      })
-      continue
-    }
+    if (!hasExpired) continue
 
-    logger.info({ serviceId, ttl }, "TTL expired for service")
+    result.expired++
+    logger.info({ serviceId, ttl, elapsed: Math.floor(elapsed / 1000) }, "TTL expired for service")
+
     try {
       await sdk.DeleteService({ serviceId })
       logger.info({ serviceId }, "Service deleted successfully")
-      results.push({
-        serviceId,
-        shouldTerminate: true,
-        terminated: true,
-      })
+
+      missionStore.update(serviceId, { status: "expired" })
+      logger.info({ serviceId, status: "expired" }, "Mission status updated in history")
+
+      result.terminated++
     } catch (deleteError: any) {
-      logger.error({ serviceId, err: deleteError }, "Failed to delete service")
-      results.push({
-        serviceId,
-        shouldTerminate: true,
-        terminated: false,
-      })
+      logger.error({ serviceId, err: deleteError }, "Failed to delete expired service")
+      result.failed++
     }
   }
 
   return NextResponse.json({
     success: true,
-    results,
+    result,
   })
 }
 

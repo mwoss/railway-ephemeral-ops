@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { withErrorHandler } from "@/lib/api-error-handler"
 import { logger } from "@/lib/logger"
+import { missionStore } from "@/lib/mission-store"
 import { createRailwayClient, getRailwayProjectId, getRailwayToken } from "@/lib/railway"
 import type { StartMissionRequest } from "@/lib/types"
 import { validateMissionInputs } from "@/lib/validation"
@@ -98,19 +99,24 @@ async function startMissionHandler(request: NextRequest) {
   const deploymentId = allDeployments[0]?.node?.id
   logger.info({ serviceId, deploymentId, ttl }, "Mission started")
 
+  const mission = {
+    serviceId,
+    serviceName,
+    status: "provisioning" as const,
+    startTime: Date.now(),
+    ttl,
+    image,
+    command,
+    logs: null,
+    deploymentId: deploymentId || null,
+  }
+
+  missionStore.set(mission)
+  logger.info({ serviceId, status: mission.status }, "Mission saved to history")
+
   return NextResponse.json({
     success: true,
-    mission: {
-      serviceId,
-      serviceName,
-      status: "provisioning",
-      startTime: Date.now(),
-      ttl,
-      image,
-      command,
-      logs: null,
-      deploymentId: deploymentId || null,
-    },
+    mission,
   })
 }
 

@@ -35,12 +35,6 @@ async function startMission(params: {
     throw new Error(data.error || "Failed to start mission")
   }
 
-  await fetch("/api/mission/history", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ mission: data.mission }),
-  })
-
   return data.mission
 }
 
@@ -56,15 +50,6 @@ async function abortMission(serviceId: string): Promise<void> {
   if (!data.success) {
     throw new Error(data.error || "Failed to abort mission")
   }
-
-  await fetch("/api/mission/history", {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      serviceId,
-      updates: { status: "terminated" },
-    }),
-  })
 }
 
 async function saveMissionToHistory(mission: Mission): Promise<void> {
@@ -183,37 +168,7 @@ async function syncMissionStatus(
   }
 }
 
-async function updateMissionInHistory(params: {
-  serviceId: string
-  updates: Partial<Mission>
-}): Promise<void> {
-  const response = await fetch("/api/mission/history", {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(params),
-  })
-
-  const data = await response.json()
-
-  if (!data.success) {
-    throw new Error(data.error || "Failed to update mission")
-  }
-}
-
-export function useUpdateMission() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: updateMissionInHistory,
-    onSuccess: (_, { serviceId, updates }) => {
-      queryClient.setQueryData<Mission[]>(missionKeys.history(), (old = []) =>
-        old.map((mission) =>
-          mission.serviceId === serviceId ? { ...mission, ...updates } : mission
-        )
-      )
-    },
-  })
-}
+// updateMissionInHistory and useUpdateMission removed - backend endpoints now handle history updates
 
 export function useSyncMissionStatus() {
   const queryClient = useQueryClient()
@@ -234,14 +189,6 @@ export function useSyncMissionStatus() {
             : mission
         )
       )
-
-      updateMissionInHistory({
-        serviceId,
-        updates: {
-          status: status as Mission["status"],
-          deploymentId: deploymentId || undefined,
-        },
-      }).catch(() => {})
 
       if (status === "failed") {
         toast.error("Launch Failed", {

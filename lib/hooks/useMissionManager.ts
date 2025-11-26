@@ -7,7 +7,6 @@ import {
   useMissionHistory,
   useSaveMissionToHistory,
   useStartMission,
-  useUpdateMission,
 } from "./useMissions"
 import { useStatusSync } from "./useStatusSync"
 
@@ -18,7 +17,6 @@ export function useMissionManager() {
   const startMissionMutation = useStartMission()
   const abortMissionMutation = useAbortMission()
   const saveMissionMutation = useSaveMissionToHistory()
-  const updateMissionMutation = useUpdateMission()
 
   useStatusSync(selectedMission)
 
@@ -40,11 +38,7 @@ export function useMissionManager() {
           .then((res) => res.json())
           .then((data) => {
             if (data.success && data.status !== mission.status) {
-              updateMissionMutation.mutate({
-                serviceId: mission.serviceId,
-                updates: { status: data.status, deploymentId: data.deploymentId },
-              })
-
+              // Backend now handles updating history, just show toast if failed
               if (data.status === "failed") {
                 toast.error("Mission Failed", {
                   description: `${mission.serviceName} crashed. Check image and command.`,
@@ -57,7 +51,7 @@ export function useMissionManager() {
     }, 3000)
 
     return () => clearInterval(interval)
-  }, [missions, updateMissionMutation])
+  }, [missions])
 
   // Auto-select most recent mission
   useEffect(() => {
@@ -73,50 +67,21 @@ export function useMissionManager() {
     }
   }, [missions])
 
-  // TTL monitoring
   useEffect(() => {
-    const activeMissions = missions.filter(
-      (m) => m.status === "active" || m.status === "provisioning" || m.status === "injecting"
-    )
-
-    if (activeMissions.length === 0) return
-
-    const checkAllTTLs = async () => {
+    const triggerTTLCheck = async () => {
       try {
-        const response = await fetch("/api/mission/ttl", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            missions: activeMissions.map((m) => ({
-              serviceId: m.serviceId,
-              startTime: m.startTime,
-              ttl: m.ttl,
-            })),
-          }),
-        })
-
-        const data = await response.json()
-
-        if (data.success && data.results) {
-          for (const result of data.results) {
-            if (result.shouldTerminate && result.terminated) {
-              await updateMissionMutation.mutateAsync({
-                serviceId: result.serviceId,
-                updates: { status: "expired" },
-              })
-            }
-          }
-        }
+        await fetch("/api/mission/ttl", { method: "POST" })
       } catch (error) {
-        // Silently fail TTL checks
+
       }
     }
 
-    checkAllTTLs()
-    const interval = setInterval(checkAllTTLs, 30000)
+    void triggerTTLCheck()
+
+    const interval = setInterval(triggerTTLCheck, 30000)
 
     return () => clearInterval(interval)
-  }, [missions, updateMissionMutation])
+  }, [])
 
   const handleStartMission = async (
     image: string,
@@ -166,11 +131,6 @@ export function useMissionManager() {
         status: "terminated",
       }
       setSelectedMission(terminatedMission)
-
-      await updateMissionMutation.mutateAsync({
-        serviceId: selectedMission.serviceId,
-        updates: { status: "terminated" },
-      })
     } catch (error) {
       // Silently fail abort
     }

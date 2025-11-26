@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { withErrorHandler } from "@/lib/api-error-handler"
 import { logger } from "@/lib/logger"
+import { missionStore } from "@/lib/mission-store"
 import { createRailwayClient, getRailwayToken } from "@/lib/railway"
 
 interface SyncStatusRequest {
@@ -61,6 +62,14 @@ async function syncStatusHandler(request: NextRequest) {
   const deploymentId = deployment.id
 
   logger.info({ serviceId, railwayStatus, missionStatus, deploymentId }, "Status synced")
+
+  const updated = missionStore.update(serviceId, {
+    status: missionStatus as any,
+    deploymentId,
+  })
+  if (updated) {
+    logger.info({ serviceId, status: missionStatus }, "Mission status updated in history")
+  }
 
   const response: SyncStatusResponse = {
     success: true,

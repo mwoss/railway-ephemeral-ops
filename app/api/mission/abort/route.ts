@@ -48,6 +48,9 @@ async function abortMissionHandler(request: NextRequest) {
   await sdk.DeleteService({ serviceId })
   logger.info({ serviceId }, "Service deleted successfully")
 
+  missionStore.update(serviceId, { status: "terminated" })
+  logger.info({ serviceId, status: "terminated" }, "Mission status updated in history")
+
   return NextResponse.json({
     success: true,
   })
