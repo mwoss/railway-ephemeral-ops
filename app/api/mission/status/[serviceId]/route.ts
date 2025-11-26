@@ -64,9 +64,18 @@ async function syncStatusHandler(
     status,
     deploymentId,
   })
-  if (updated) {
-    logger.info({ serviceId, status: status }, "Mission status updated in history")
+
+  if (!updated) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Mission not found in store",
+      },
+      { status: 404 }
+    )
   }
+
+  logger.info({ serviceId, status: status }, "Mission status updated in history")
 
   return NextResponse.json({
     success: true,
