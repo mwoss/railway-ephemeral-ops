@@ -1,38 +1,39 @@
-import {ConfigurationPanel} from './ConfigurationPanel';
+import { ConfigurationPanel } from "./ConfigurationPanel"
 
 interface ConfigurationModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (image: string, command: string, ttl: number | null) => Promise<boolean>;
-  isLoading: boolean;
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (image: string, command: string, ttl: number | null) => Promise<boolean>
+  isLoading: boolean
 }
 
-export function ConfigurationModal({isOpen, onClose, onSubmit, isLoading}: ConfigurationModalProps) {
-  if (!isOpen) return null;
+export function ConfigurationModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  isLoading,
+}: ConfigurationModalProps) {
+  if (!isOpen) return null
 
   const handleSubmit = async (image: string, command: string, ttl: number | null) => {
-    const success = await onSubmit(image, command, ttl);
+    const success = await onSubmit(image, command, ttl)
     if (success) {
-      onClose();
+      onClose()
     }
-  };
+  }
 
   return (
     <div
       className="absolute inset-0 bg-black/50 backdrop-blur-sm z-10 flex items-center justify-center"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
-          onClose();
+          onClose()
         }
       }}
     >
       <div className="w-96 bg-[#191622] border border-[#33323E] rounded-xl p-6">
-        <ConfigurationPanel
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-          onClose={onClose}
-        />
+        <ConfigurationPanel onSubmit={handleSubmit} isLoading={isLoading} onClose={onClose} />
       </div>
     </div>
-  );
+  )
 }

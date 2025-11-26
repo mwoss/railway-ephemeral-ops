@@ -1,57 +1,68 @@
-'use client';
+"use client"
 
-import {useState, useEffect} from 'react';
-import {Rocket, Image as ImageIcon, Terminal, Clock, Loader2, Info, X, Infinity, AlertTriangle} from 'lucide-react';
-import {DEFAULT_IMAGES, TTL_OPTIONS} from '@/lib/types';
+import {
+  AlertTriangle,
+  Clock,
+  Image as ImageIcon,
+  Infinity,
+  Info,
+  Loader2,
+  Rocket,
+  Terminal,
+  X,
+} from "lucide-react"
+import { useEffect, useState } from "react"
+import { DEFAULT_IMAGES, TTL_OPTIONS } from "@/lib/types"
 
 interface ConfigurationPanelProps {
-  onSubmit: (image: string, command: string, ttl: number | null) => void;
-  isLoading: boolean;
-  onClose?: () => void;
+  onSubmit: (image: string, command: string, ttl: number | null) => void
+  isLoading: boolean
+  onClose?: () => void
 }
 
 interface PanelHeaderProps {
-  onClose?: () => void;
+  onClose?: () => void
 }
 
 interface ImageSelectorProps {
-  image: string;
-  onImageChange: (image: string) => void;
+  image: string
+  onImageChange: (image: string) => void
 }
 
 interface CommandInputProps {
-  command: string;
-  onCommandChange: (command: string) => void;
+  command: string
+  onCommandChange: (command: string) => void
 }
 
 interface TTLSelectorProps {
-  ttl: number | null;
-  onTTLChange: (ttl: number | null) => void;
+  ttl: number | null
+  onTTLChange: (ttl: number | null) => void
 }
 
 interface SubmitButtonProps {
-  isLoading: boolean;
-  ttl: number | null;
+  isLoading: boolean
+  ttl: number | null
 }
 
 const IMAGE_COMMANDS: Record<string, string> = {
-  'python:3.9-slim': 'python -c "import sys; print(f\'Python {sys.version}\'); print(\'Hello from Railway Runner!\')"',
-  'python:3.11-slim': 'python -c "print(\'Installing requests...\'); import subprocess; subprocess.check_call([\'pip\', \'install\', \'requests\']); import requests; r = requests.get(\'https://api.github.com\'); print(f\'GitHub API Status: {r.status_code}\')"',
-  'node:18-alpine': 'node -e "console.log(\'Node.js\', process.version); console.log(\'Hello from Railway Runner!\'); console.log(\'Platform:\', process.platform);"',
-  'node:20-alpine': 'node -e "const https = require(\'https\'); console.log(\'Fetching data...\'); https.get(\'https://api.github.com/users/github\', (res) => { let data = \'\'; res.on(\'data\', chunk => data += chunk); res.on(\'end\', () => console.log(\'GitHub API Response:\', JSON.parse(data).name)); });"',
-  'golang:1.23-alpine': 'sh -c "apk add --no-cache curl && curl -sL https://gist.githubusercontent.com/mwoss/b5dc525fa532adee1bcc39c2e823ab0a/raw/4f56efb07545ff801c6978c5a6ab8205a6f04ea9/one_off_railway.go -o temp_run.go && go run temp_run.go && rm temp_run.go"',
-};
+  "python:3.9-slim":
+    "python -c \"import sys; print(f'Python {sys.version}'); print('Hello from Railway Runner!')\"",
+  "python:3.11-slim":
+    "python -c \"print('Installing requests...'); import subprocess; subprocess.check_call(['pip', 'install', 'requests']); import requests; r = requests.get('https://api.github.com'); print(f'GitHub API Status: {r.status_code}')\"",
+  "node:18-alpine":
+    "node -e \"console.log('Node.js', process.version); console.log('Hello from Railway Runner!'); console.log('Platform:', process.platform);\"",
+  "node:20-alpine":
+    "node -e \"const https = require('https'); console.log('Fetching data...'); https.get('https://api.github.com/users/github', (res) => { let data = ''; res.on('data', chunk => data += chunk); res.on('end', () => console.log('GitHub API Response:', JSON.parse(data).name)); });\"",
+  "golang:1.23-alpine":
+    'sh -c "apk add --no-cache curl && curl -sL https://gist.githubusercontent.com/mwoss/b5dc525fa532adee1bcc39c2e823ab0a/raw/4f56efb07545ff801c6978c5a6ab8205a6f04ea9/one_off_railway.go -o temp_run.go && go run temp_run.go && rm temp_run.go"',
+}
 
 function PanelHeader({ onClose }: PanelHeaderProps) {
   return (
     <div className="flex items-start justify-between">
       <div>
-        <h2 className="text-lg font-semibold text-white mb-1">
-          New Mission
-        </h2>
-        <p className="text-gray-500 text-xs">
-          Configure your ephemeral container deployment
-        </p>
+        <h2 className="text-lg font-semibold text-white mb-1">New Mission</h2>
+        <p className="text-gray-500 text-xs">Configure your ephemeral container deployment</p>
       </div>
       {onClose && (
         <button
@@ -62,7 +73,7 @@ function PanelHeader({ onClose }: PanelHeaderProps) {
         </button>
       )}
     </div>
-  );
+  )
 }
 
 function ImageSelector({ image, onImageChange }: ImageSelectorProps) {
@@ -106,8 +117,8 @@ function ImageSelector({ image, onImageChange }: ImageSelectorProps) {
             onClick={() => onImageChange(img)}
             className={`px-2 py-1 rounded text-xs font-mono transition-all ${
               image === img
-                ? 'bg-purple-500/20 text-purple-400 border border-purple-500'
-                : 'bg-transparent text-gray-500 border border-[#33323E] hover:border-[#4a4956]'
+                ? "bg-purple-500/20 text-purple-400 border border-purple-500"
+                : "bg-transparent text-gray-500 border border-[#33323E] hover:border-[#4a4956]"
             }`}
           >
             {img}
@@ -115,7 +126,7 @@ function ImageSelector({ image, onImageChange }: ImageSelectorProps) {
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 function CommandInput({ command, onCommandChange }: CommandInputProps) {
@@ -134,7 +145,7 @@ function CommandInput({ command, onCommandChange }: CommandInputProps) {
         required
       />
     </div>
-  );
+  )
 }
 
 function TTLSelector({ ttl, onTTLChange }: TTLSelectorProps) {
@@ -153,8 +164,8 @@ function TTLSelector({ ttl, onTTLChange }: TTLSelectorProps) {
             onClick={() => onTTLChange(option.value)}
             className={`px-3 py-2 rounded-lg font-mono text-sm transition-all ${
               ttl === option.value
-                ? 'bg-purple-500/20 text-purple-400 border border-purple-500'
-                : 'bg-transparent text-gray-500 border border-[#33323E] hover:border-[#4a4956]'
+                ? "bg-purple-500/20 text-purple-400 border border-purple-500"
+                : "bg-transparent text-gray-500 border border-[#33323E] hover:border-[#4a4956]"
             }`}
           >
             {option.label}
@@ -166,8 +177,8 @@ function TTLSelector({ ttl, onTTLChange }: TTLSelectorProps) {
           onClick={() => onTTLChange(null)}
           className={`col-span-2 flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-mono text-sm transition-all ${
             ttl === null
-              ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500'
-              : 'bg-transparent text-gray-500 border border-[#33323E] hover:border-yellow-500/50 hover:text-yellow-100'
+              ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500"
+              : "bg-transparent text-gray-500 border border-[#33323E] hover:border-yellow-500/50 hover:text-yellow-100"
           }`}
         >
           <Infinity className="w-4 h-4" />
@@ -182,7 +193,7 @@ function TTLSelector({ ttl, onTTLChange }: TTLSelectorProps) {
         </div>
       )}
     </div>
-  );
+  )
 }
 
 function SubmitButton({ isLoading, ttl }: SubmitButtonProps) {
@@ -192,35 +203,35 @@ function SubmitButton({ isLoading, ttl }: SubmitButtonProps) {
       disabled={isLoading}
       className={`w-full font-medium py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 text-sm ${
         isLoading
-          ? 'bg-white/5 text-gray-500 cursor-not-allowed'
-          : 'bg-[#853bce] hover:bg-[#A667E4] text-white'
+          ? "bg-white/5 text-gray-500 cursor-not-allowed"
+          : "bg-[#853bce] hover:bg-[#A667E4] text-white"
       }`}
     >
-      {isLoading ? (
-        <Loader2 className="w-5 h-5 animate-spin" />
-      ) : (
-        <Rocket className="w-5 h-5" />
-      )}
-      {isLoading ? 'Launching Mission...' : ttl === null ? 'Start Indefinite Mission' : 'Run Mission'}
+      {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Rocket className="w-5 h-5" />}
+      {isLoading
+        ? "Launching Mission..."
+        : ttl === null
+          ? "Start Indefinite Mission"
+          : "Run Mission"}
     </button>
-  );
+  )
 }
 
 export function ConfigurationPanel({ onSubmit, isLoading, onClose }: ConfigurationPanelProps) {
-  const [image, setImage] = useState('python:3.9-slim');
-  const [command, setCommand] = useState(IMAGE_COMMANDS['python:3.9-slim']);
-  const [ttl, setTtl] = useState<number | null>(5);
+  const [image, setImage] = useState("python:3.9-slim")
+  const [command, setCommand] = useState(IMAGE_COMMANDS["python:3.9-slim"])
+  const [ttl, setTtl] = useState<number | null>(5)
 
   useEffect(() => {
     if (IMAGE_COMMANDS[image]) {
-      setCommand(IMAGE_COMMANDS[image]);
+      setCommand(IMAGE_COMMANDS[image])
     }
-  }, [image]);
+  }, [image])
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(image, command, ttl);
-  };
+    e.preventDefault()
+    onSubmit(image, command, ttl)
+  }
 
   return (
     <div className="space-y-4">
@@ -232,5 +243,5 @@ export function ConfigurationPanel({ onSubmit, isLoading, onClose }: Configurati
         <SubmitButton isLoading={isLoading} ttl={ttl} />
       </form>
     </div>
-  );
+  )
 }

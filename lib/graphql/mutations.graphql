@@ -1,8 +1,5 @@
 mutation CreateService($projectId: String!, $image: String!) {
-  serviceCreate(input: {
-    projectId: $projectId
-    source: { image: $image }
-  }) {
+  serviceCreate(input: { projectId: $projectId, source: { image: $image } }) {
     id
     name
   }
@@ -12,10 +9,7 @@ mutation UpdateCommand($environmentId: String, $serviceId: String!, $command: St
   serviceInstanceUpdate(
     environmentId: $environmentId
     serviceId: $serviceId
-    input: {
-        startCommand: $command,
-        restartPolicyType: NEVER
-    }
+    input: { startCommand: $command, restartPolicyType: NEVER }
   )
 }
 

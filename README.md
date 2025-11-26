@@ -8,7 +8,7 @@ Service automates the lifecycle of one-off jobs (called `mission` 🚀 in contex
 * **Auto-Termination (TTL):** Set containers to self-destruct after 5m, 15m, or 1h to prevent billing leaks. Includes a Manual Mode for indefinite runtime.
 * **Custom Task Runner:** Deploy standard Docker images (Python, Node, Alpine) with custom shell commands (sh -c ...).
 * **Live Observability:** Stream container logs in real-time within a built-in terminal view.
-* **Reliability:** Includes crash detection for invalid images and retry logic for failed cleanup operations.
+* **"Reliability":** Includes crash detection for invalid images and retry logic for failed cleanup operations.
 
 ### Use cases
 * Scripts. Execute one-off data processing or maintenance scripts.
@@ -144,6 +144,7 @@ moving this to a production-grade utility would require addressing several archi
 
 * **User auth and permissions:**
   * Implement user authentication and permissions (RBAC) to prevent unauthorized usage.
+  * Yes, user can mine cryptos on your deployed publicly copy of this service 💸
 
 * **Editor improvements:**
   * Add syntax highlighting for the "command" input field.

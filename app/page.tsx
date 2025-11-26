@@ -1,18 +1,18 @@
-'use client';
+"use client"
 
-import {useState} from 'react';
-import {PageHeader} from '@/components/PageHeader';
-import {CanvasView} from '@/components/CanvasView';
-import {HistoryView} from '@/components/HistoryView';
-import {ConfigurationModal} from '@/components/ConfigurationModal';
-import {InspectorPane} from '@/components/InspectorPane';
-import {useMissionManager} from '@/lib/hooks/useMissionManager';
+import { useState } from "react"
+import { CanvasView } from "@/components/CanvasView"
+import { ConfigurationModal } from "@/components/ConfigurationModal"
+import { HistoryView } from "@/components/HistoryView"
+import { InspectorPane } from "@/components/InspectorPane"
+import { PageHeader } from "@/components/PageHeader"
+import { useMissionManager } from "@/lib/hooks/useMissionManager"
 
-type ViewMode = 'CANVAS' | 'HISTORY';
+type ViewMode = "CANVAS" | "HISTORY"
 
 export default function Home() {
-  const [viewMode, setViewMode] = useState<ViewMode>('CANVAS');
-  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("CANVAS")
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
 
   const {
     activeMissions,
@@ -24,7 +24,7 @@ export default function Home() {
     handleAbortMission,
     handleSelectMission,
     setSelectedMission,
-  } = useMissionManager();
+  } = useMissionManager()
 
   return (
     <div className="h-screen w-screen flex bg-[#14111D] overflow-hidden text-white">
@@ -36,25 +36,24 @@ export default function Home() {
           archivedMissionsCount={archivedMissions.length}
           onNewMission={() => setIsConfigModalOpen(true)}
         />
-        <div className={`flex-1 relative overflow-auto ${viewMode === 'CANVAS' ? 'bg-grid-pattern p-10' : 'bg-[#14111D] p-6'}`}>
+        <div
+          className={`flex-1 relative overflow-auto ${viewMode === "CANVAS" ? "bg-grid-pattern p-10" : "bg-[#14111D] p-6"}`}
+        >
           <ConfigurationModal
             isOpen={isConfigModalOpen}
             onClose={() => setIsConfigModalOpen(false)}
             onSubmit={handleStartMission}
             isLoading={isStarting}
           />
-          {viewMode === 'CANVAS' && (
+          {viewMode === "CANVAS" && (
             <CanvasView
               missions={activeMissions}
               selectedMission={selectedMission}
               onSelectMission={handleSelectMission}
             />
           )}
-          {viewMode === 'HISTORY' && (
-            <HistoryView
-              missions={archivedMissions}
-              onSelectMission={handleSelectMission}
-            />
+          {viewMode === "HISTORY" && (
+            <HistoryView missions={archivedMissions} onSelectMission={handleSelectMission} />
           )}
         </div>
       </div>
@@ -67,5 +66,5 @@ export default function Home() {
         />
       )}
     </div>
-  );
+  )
 }

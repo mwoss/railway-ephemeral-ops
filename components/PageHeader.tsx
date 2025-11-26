@@ -1,11 +1,11 @@
-import {Grid3x3, List} from 'lucide-react';
+import { Grid3x3, List } from "lucide-react"
 
 interface PageHeaderProps {
-  viewMode: 'CANVAS' | 'HISTORY';
-  onViewModeChange: (mode: 'CANVAS' | 'HISTORY') => void;
-  activeMissionsCount: number;
-  archivedMissionsCount: number;
-  onNewMission: () => void;
+  viewMode: "CANVAS" | "HISTORY"
+  onViewModeChange: (mode: "CANVAS" | "HISTORY") => void
+  activeMissionsCount: number
+  archivedMissionsCount: number
+  onNewMission: () => void
 }
 
 export function PageHeader({
@@ -25,34 +25,34 @@ export function PageHeader({
 
         <div className="flex items-center bg-[#191622] border border-[#33323E] rounded-lg p-1">
           <button
-            onClick={() => onViewModeChange('CANVAS')}
+            onClick={() => onViewModeChange("CANVAS")}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-              viewMode === 'CANVAS'
-                ? 'bg-[#853bce] text-white'
-                : 'text-gray-400 hover:text-white'
+              viewMode === "CANVAS" ? "bg-[#853bce] text-white" : "text-gray-400 hover:text-white"
             }`}
           >
-            <Grid3x3 className="w-3.5 h-3.5"/>
+            <Grid3x3 className="w-3.5 h-3.5" />
             Live Orbit
-            <span className={`px-1.5 py-0.5 rounded text-xs ${
-              viewMode === 'CANVAS' ? 'bg-white/20' : 'bg-white/10'
-            }`}>
+            <span
+              className={`px-1.5 py-0.5 rounded text-xs ${
+                viewMode === "CANVAS" ? "bg-white/20" : "bg-white/10"
+              }`}
+            >
               {activeMissionsCount}
             </span>
           </button>
           <button
-            onClick={() => onViewModeChange('HISTORY')}
+            onClick={() => onViewModeChange("HISTORY")}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-              viewMode === 'HISTORY'
-                ? 'bg-[#853bce] text-white'
-                : 'text-gray-400 hover:text-white'
+              viewMode === "HISTORY" ? "bg-[#853bce] text-white" : "text-gray-400 hover:text-white"
             }`}
           >
-            <List className="w-3.5 h-3.5"/>
+            <List className="w-3.5 h-3.5" />
             Mission Logs
-            <span className={`px-1.5 py-0.5 rounded text-xs ${
-              viewMode === 'HISTORY' ? 'bg-white/20' : 'bg-white/10'
-            }`}>
+            <span
+              className={`px-1.5 py-0.5 rounded text-xs ${
+                viewMode === "HISTORY" ? "bg-white/20" : "bg-white/10"
+              }`}
+            >
               {archivedMissionsCount}
             </span>
           </button>
@@ -68,5 +68,5 @@ export function PageHeader({
         </button>
       </div>
     </div>
-  );
+  )
 }

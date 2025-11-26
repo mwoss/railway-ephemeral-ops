@@ -1,34 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createRailwayClient, getRailwayToken } from '@/lib/railway';
-import { withErrorHandler } from '@/lib/api-error-handler';
+import { type NextRequest, NextResponse } from "next/server"
+import { withErrorHandler } from "@/lib/api-error-handler"
+import { createRailwayClient, getRailwayToken } from "@/lib/railway"
 
 async function getStatusHandler(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const serviceId = searchParams.get('serviceId');
+  const searchParams = request.nextUrl.searchParams
+  const serviceId = searchParams.get("serviceId")
 
   if (!serviceId) {
     return NextResponse.json(
-      { success: false, error: 'Missing required parameter: serviceId' },
+      { success: false, error: "Missing required parameter: serviceId" },
       { status: 400 }
-    );
+    )
   }
 
-  const token = getRailwayToken();
-  const sdk = createRailwayClient(token);
+  const token = getRailwayToken()
+  const sdk = createRailwayClient(token)
 
-  const result = await sdk.GetService({ serviceId });
+  const result = await sdk.GetService({ serviceId })
 
   if (!result.service) {
-    return NextResponse.json(
-      { success: false, error: 'Service not found' },
-      { status: 404 }
-    );
+    return NextResponse.json({ success: false, error: "Service not found" }, { status: 404 })
   }
 
   return NextResponse.json({
     success: true,
     service: result.service,
-  });
+  })
 }
 
-export const GET = withErrorHandler(getStatusHandler);
+export const GET = withErrorHandler(getStatusHandler)

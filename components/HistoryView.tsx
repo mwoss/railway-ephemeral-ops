@@ -1,28 +1,28 @@
-import {Clock} from 'lucide-react';
-import type {Mission} from '@/lib/types';
-import {formatDate} from '@/lib/utils';
+import { Clock } from "lucide-react"
+import type { Mission } from "@/lib/types"
+import { formatDate } from "@/lib/utils"
 
 interface HistoryViewProps {
-  missions: Mission[];
-  onSelectMission: (mission: Mission) => void;
+  missions: Mission[]
+  onSelectMission: (mission: Mission) => void
 }
 
 interface HistoryTableRowProps {
-  mission: Mission;
-  onSelect: () => void;
+  mission: Mission
+  onSelect: () => void
 }
 
-function HistoryTableRow({mission, onSelect}: HistoryTableRowProps) {
+function HistoryTableRow({ mission, onSelect }: HistoryTableRowProps) {
   const getStatusConfig = () => {
-    if (mission.status === 'expired') return {color: 'bg-gray-500', label: 'Expired'};
-    if (mission.status === 'failed' || mission.status === 'cleanup_failed') {
-      return {color: 'bg-[#b62d2b]', label: 'Failed'};
+    if (mission.status === "expired") return { color: "bg-gray-500", label: "Expired" }
+    if (mission.status === "failed" || mission.status === "cleanup_failed") {
+      return { color: "bg-[#b62d2b]", label: "Failed" }
     }
-    return {color: 'bg-gray-500', label: 'Terminated'};
-  };
+    return { color: "bg-gray-500", label: "Terminated" }
+  }
 
-  const statusConfig = getStatusConfig();
-  const duration = mission.ttl === null ? '∞' : mission.ttl ? `${mission.ttl}m` : 'N/A';
+  const statusConfig = getStatusConfig()
+  const duration = mission.ttl === null ? "∞" : mission.ttl ? `${mission.ttl}m` : "N/A"
 
   return (
     <div
@@ -30,7 +30,7 @@ function HistoryTableRow({mission, onSelect}: HistoryTableRowProps) {
       onClick={onSelect}
     >
       <div className="col-span-2 flex items-center gap-2">
-        <div className={`w-2 h-2 rounded-full ${statusConfig.color}`}/>
+        <div className={`w-2 h-2 rounded-full ${statusConfig.color}`} />
         <span className="text-sm text-gray-400">{statusConfig.label}</span>
       </div>
 
@@ -47,25 +47,23 @@ function HistoryTableRow({mission, onSelect}: HistoryTableRowProps) {
       </div>
 
       <div className="col-span-1 flex items-center">
-        <span className="text-sm text-gray-400">
-          {formatDate(mission.startTime)}
-        </span>
+        <span className="text-sm text-gray-400">{formatDate(mission.startTime)}</span>
       </div>
     </div>
-  );
+  )
 }
 
 function EmptyHistoryState() {
   return (
     <div className="px-6 py-12 text-center">
-      <Clock className="w-12 h-12 text-gray-700 mx-auto mb-4"/>
+      <Clock className="w-12 h-12 text-gray-700 mx-auto mb-4" />
       <p className="text-gray-500 text-sm">No archived missions</p>
       <p className="text-gray-600 text-xs mt-1">Completed missions will appear here</p>
     </div>
-  );
+  )
 }
 
-export function HistoryView({missions, onSelectMission}: HistoryViewProps) {
+export function HistoryView({ missions, onSelectMission }: HistoryViewProps) {
   return (
     <div className="w-full max-w-6xl mx-auto mt-8">
       <div className="border border-[#33323E] rounded-lg overflow-hidden">
@@ -79,7 +77,7 @@ export function HistoryView({missions, onSelectMission}: HistoryViewProps) {
 
         <div className="divide-y divide-[#33323E]">
           {missions.length === 0 ? (
-            <EmptyHistoryState/>
+            <EmptyHistoryState />
           ) : (
             missions.map((mission) => (
               <HistoryTableRow
@@ -92,5 +90,5 @@ export function HistoryView({missions, onSelectMission}: HistoryViewProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

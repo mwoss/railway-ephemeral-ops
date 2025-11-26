@@ -1,22 +1,18 @@
-import type { CodegenConfig } from '@graphql-codegen/cli';
+import type { CodegenConfig } from "@graphql-codegen/cli"
 
 const config: CodegenConfig = {
   overwrite: true,
   schema: {
-    'https://backboard.railway.app/graphql/v2': {
+    "https://backboard.railway.app/graphql/v2": {
       headers: {
-        Authorization: `Bearer ${process.env.RAILWAY_API_TOKEN || ''}`,
+        Authorization: `Bearer ${process.env.RAILWAY_API_TOKEN || ""}`,
       },
     },
   },
-  documents: 'lib/graphql/**/*.graphql',
+  documents: "lib/graphql/**/*.graphql",
   generates: {
-    'generated/graphql.ts': {
-      plugins: [
-        'typescript',
-        'typescript-operations',
-        'typescript-graphql-request',
-      ],
+    "generated/graphql.ts": {
+      plugins: ["typescript", "typescript-operations", "typescript-graphql-request"],
       config: {
         skipTypename: false,
         withHooks: false,
@@ -25,6 +21,6 @@ const config: CodegenConfig = {
       },
     },
   },
-};
+}
 
-export default config;
+export default config

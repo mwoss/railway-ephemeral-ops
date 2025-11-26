@@ -5,6 +5,6 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   serverExternalPackages: ["pino", "thread-stream"],
-};
+}
 
-export default nextConfig;
+export default nextConfig

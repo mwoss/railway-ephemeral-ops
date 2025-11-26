@@ -1,19 +1,19 @@
-'use server';
+"use server"
 
-import {createRailwayClient, getRailwayToken} from '@/lib/railway';
-import {missionStore} from '@/lib/mission-store';
-import type {MissionLogsResponse} from '@/lib/types';
+import { missionStore } from "@/lib/mission-store"
+import { createRailwayClient, getRailwayToken } from "@/lib/railway"
+import type { MissionLogsResponse } from "@/lib/types"
 
 type ActionState<T> =
   | {
-      success: true;
-      data: T;
+      success: true
+      data: T
     }
   | {
-      success: false;
-      error: string;
-      details?: string;
-    };
+      success: false
+      error: string
+      details?: string
+    }
 
 export async function getMissionLogs(
   serviceId: string,
@@ -21,8 +21,8 @@ export async function getMissionLogs(
   deploymentId?: string | null
 ): Promise<ActionState<MissionLogsResponse>> {
   try {
-    if (status === 'terminated' || status === 'error' || status === 'cleanup_failed') {
-      const mission = missionStore.get(serviceId);
+    if (status === "terminated" || status === "error" || status === "cleanup_failed") {
+      const mission = missionStore.get(serviceId)
 
       if (!mission || !mission.logs) {
         return {
@@ -31,20 +31,23 @@ export async function getMissionLogs(
             logs: [],
             isLive: false,
           },
-        };
+        }
       }
 
-      const logLines = mission.logs.split('\n').filter(Boolean).map((line) => {
-        try {
-          return JSON.parse(line);
-        } catch {
-          return {
-            timestamp: new Date().toISOString(),
-            message: line,
-            severity: 'INFO',
-          };
-        }
-      });
+      const logLines = mission.logs
+        .split("\n")
+        .filter(Boolean)
+        .map((line) => {
+          try {
+            return JSON.parse(line)
+          } catch {
+            return {
+              timestamp: new Date().toISOString(),
+              message: line,
+              severity: "INFO",
+            }
+          }
+        })
 
       return {
         success: true,
@@ -52,19 +55,19 @@ export async function getMissionLogs(
           logs: logLines,
           isLive: false,
         },
-      };
+      }
     }
 
     // For active missions, fetch live logs from Railway
-    const token = getRailwayToken();
-    const sdk = createRailwayClient(token);
+    const token = getRailwayToken()
+    const sdk = createRailwayClient(token)
 
     // Use the stored deployment ID if available, otherwise get the latest
-    let targetDeploymentId = deploymentId;
+    let targetDeploymentId = deploymentId
 
     if (!targetDeploymentId) {
-      const deploymentResult = await sdk.GetLatestDeployment({serviceId});
-      targetDeploymentId = deploymentResult.service?.deployments?.edges?.[0]?.node?.id;
+      const deploymentResult = await sdk.GetLatestDeployment({ serviceId })
+      targetDeploymentId = deploymentResult.service?.deployments?.edges?.[0]?.node?.id
     }
 
     if (!targetDeploymentId) {
@@ -74,43 +77,43 @@ export async function getMissionLogs(
           logs: [
             {
               timestamp: new Date().toISOString(),
-              message: 'Initializing Container...',
-              severity: 'INFO',
+              message: "Initializing Container...",
+              severity: "INFO",
             },
           ],
           isLive: true,
         },
-      };
+      }
     }
 
     const logsResult = await sdk.GetDeploymentLogs({
       deploymentId: targetDeploymentId,
       limit: 500,
-    });
+    })
 
     const logs = (logsResult.deploymentLogs || []).map((log) => ({
       timestamp: log?.timestamp || new Date().toISOString(),
-      message: log?.message || '',
+      message: log?.message || "",
       severity: log?.severity,
-    }));
+    }))
 
     return {
       success: true,
       data: {
         logs,
-        isLive: status === 'active' || status === 'provisioning' || status === 'injecting',
+        isLive: status === "active" || status === "provisioning" || status === "injecting",
       },
-    };
+    }
   } catch (error) {
-    let errorMessage = 'Failed to fetch logs';
+    let errorMessage = "Failed to fetch logs"
     if (error instanceof Error) {
-      errorMessage = error.message;
+      errorMessage = error.message
     }
 
     return {
       success: false,
       error: errorMessage,
       details: error instanceof Error ? error.stack : undefined,
-    };
+    }
   }
 }
