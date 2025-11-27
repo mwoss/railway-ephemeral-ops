@@ -1,4 +1,4 @@
-import { Rocket } from "lucide-react"
+import { AlertCircle, Rocket } from "lucide-react"
 import type { Mission } from "@/lib/types"
 import { MissionCard } from "./MissionCard"
 
@@ -6,9 +6,24 @@ interface CanvasViewProps {
   missions: Mission[]
   selectedMission: Mission | null
   onSelectMission: (mission: Mission) => void
+  isError?: boolean
 }
 
-export function CanvasView({ missions, selectedMission, onSelectMission }: CanvasViewProps) {
+export function CanvasView({ missions, selectedMission, onSelectMission, isError }: CanvasViewProps) {
+  if (isError) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-400 text-sm font-medium">Failed to load mission history</p>
+          <p className="text-gray-500 text-xs mt-1">
+            An unexpected error occurred
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (missions.length === 0) {
     return (
       <div className="absolute inset-0 flex items-center justify-center">

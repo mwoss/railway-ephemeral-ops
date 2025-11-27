@@ -6,6 +6,7 @@ interface PageHeaderProps {
   activeMissionsCount: number
   archivedMissionsCount: number
   onNewMission: () => void
+  isLoading?: boolean
 }
 
 interface ViewModeButtonProps {
@@ -15,6 +16,7 @@ interface ViewModeButtonProps {
   label: string
   count: number
   onClick: () => void
+  isLoading?: boolean
 }
 
 interface ViewModeToggleProps {
@@ -22,6 +24,7 @@ interface ViewModeToggleProps {
   onViewModeChange: (mode: "CANVAS" | "HISTORY") => void
   activeMissionsCount: number
   archivedMissionsCount: number
+  isLoading?: boolean
 }
 
 interface NewMissionButtonProps {
@@ -44,6 +47,7 @@ function ViewModeButton({
   label,
   count,
   onClick,
+  isLoading,
 }: ViewModeButtonProps) {
   const isActive = currentMode === mode
   return (
@@ -56,7 +60,7 @@ function ViewModeButton({
       <Icon className="w-3.5 h-3.5" />
       {label}
       <span className={`px-1.5 py-0.5 rounded text-xs ${isActive ? "bg-white/20" : "bg-white/10"}`}>
-        {count}
+        {isLoading ? "..." : count}
       </span>
     </button>
   )
@@ -67,6 +71,7 @@ function ViewModeToggle({
   onViewModeChange,
   activeMissionsCount,
   archivedMissionsCount,
+  isLoading,
 }: ViewModeToggleProps) {
   return (
     <div className="flex items-center bg-[#191622] border border-[#33323E] rounded-lg p-1">
@@ -77,6 +82,7 @@ function ViewModeToggle({
         label="Live Orbit"
         count={activeMissionsCount}
         onClick={() => onViewModeChange("CANVAS")}
+        isLoading={isLoading}
       />
       <ViewModeButton
         mode="HISTORY"
@@ -85,6 +91,7 @@ function ViewModeToggle({
         label="Mission Logs"
         count={archivedMissionsCount}
         onClick={() => onViewModeChange("HISTORY")}
+        isLoading={isLoading}
       />
     </div>
   )
@@ -107,6 +114,7 @@ export function PageHeader({
   activeMissionsCount,
   archivedMissionsCount,
   onNewMission,
+  isLoading,
 }: PageHeaderProps) {
   return (
     <div className="border-b border-[#33323E] px-6 py-4 flex items-center justify-between">
@@ -117,6 +125,7 @@ export function PageHeader({
           onViewModeChange={onViewModeChange}
           activeMissionsCount={activeMissionsCount}
           archivedMissionsCount={archivedMissionsCount}
+          isLoading={isLoading}
         />
       </div>
       <div className="flex items-center gap-3">

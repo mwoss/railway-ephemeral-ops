@@ -18,7 +18,7 @@ export default function Home() {
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null)
 
-  const { data: missions = [] } = useMissionHistory()
+  const { data: missions = [], isLoading, isError } = useMissionHistory()
 
   const activeMissions = useMemo(
     () => missions.filter((m) => isMissionActive(m.status)),
@@ -53,6 +53,7 @@ export default function Home() {
           activeMissionsCount={activeMissions.length}
           archivedMissionsCount={archivedMissions.length}
           onNewMission={() => setIsConfigModalOpen(true)}
+          isLoading={isLoading}
         />
         <div
           className={`flex-1 relative overflow-auto ${viewMode === "CANVAS" ? "bg-grid-pattern p-10" : "bg-[#14111D] p-6"}`}
@@ -67,10 +68,15 @@ export default function Home() {
               missions={activeMissions}
               selectedMission={selectedMission}
               onSelectMission={handleSelectMission}
+              isError={isError}
             />
           )}
           {viewMode === "HISTORY" && (
-            <HistoryView missions={archivedMissions} onSelectMission={handleSelectMission} />
+            <HistoryView
+              missions={archivedMissions}
+              onSelectMission={handleSelectMission}
+              isError={isError}
+            />
           )}
         </div>
       </div>
