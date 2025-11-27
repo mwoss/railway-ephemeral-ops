@@ -16,7 +16,7 @@ export interface Mission {
   timeRemaining: number | null // milliseconds remaining, null if manual mode
   image: string
   command: string
-  logs: string | null
+  logs: LogLine[] | null
   deploymentId?: string | null
   error?: string
 }

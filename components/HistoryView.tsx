@@ -69,9 +69,7 @@ function ErrorHistoryState() {
     <div className="px-6 py-12 text-center">
       <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
       <p className="text-red-400 text-sm font-medium">Failed to load mission history</p>
-      <p className="text-gray-500 text-xs mt-1">
-        An unexpected error occurred
-      </p>
+      <p className="text-gray-500 text-xs mt-1">An unexpected error occurred</p>
     </div>
   )
 }

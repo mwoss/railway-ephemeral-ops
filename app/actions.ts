@@ -2,7 +2,7 @@
 
 import { isMissionActive, isMissionTerminated } from "@/lib/mission"
 import { missionStore } from "@/lib/mission-store"
-import { createRailwayClient, getRailwayToken } from "@/lib/railway"
+import { createRailwayClient, fetchDeploymentLogs, getRailwayToken } from "@/lib/railway"
 import type { MissionLogsResponse, MissionStatus } from "@/lib/types"
 
 type ActionState<T> =
@@ -15,23 +15,6 @@ type ActionState<T> =
       error: string
       details?: string
     }
-
-function parseLogs(logs: string) {
-  return logs
-    .split("\n")
-    .filter(Boolean)
-    .map((line) => {
-      try {
-        return JSON.parse(line)
-      } catch {
-        return {
-          timestamp: new Date().toISOString(),
-          message: line,
-          severity: "INFO",
-        }
-      }
-    })
-}
 
 function getStoredLogs(serviceId: string): ActionState<MissionLogsResponse> {
   const mission = missionStore.get(serviceId)
@@ -49,7 +32,7 @@ function getStoredLogs(serviceId: string): ActionState<MissionLogsResponse> {
   return {
     success: true,
     data: {
-      logs: parseLogs(mission.logs),
+      logs: mission.logs,
       isLive: false,
     },
   }
@@ -92,16 +75,7 @@ export async function getMissionLogs(
       }
     }
 
-    const logsResult = await sdk.GetDeploymentLogs({
-      deploymentId: targetDeploymentId,
-      limit: 1000,
-    })
-
-    const logs = (logsResult.deploymentLogs || []).map((log) => ({
-      timestamp: log.timestamp,
-      message: log.message,
-      severity: log.severity,
-    }))
+    const logs = await fetchDeploymentLogs(sdk, targetDeploymentId)
 
     return {
       success: true,

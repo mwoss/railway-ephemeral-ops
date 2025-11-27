@@ -1,5 +1,5 @@
 import { logger } from "./logger"
-import { createRailwayClient, getRailwayToken } from "./railway"
+import { createRailwayClient, fetchDeploymentLogs, getRailwayToken } from "./railway"
 import type { Mission } from "./types"
 
 /*
@@ -91,20 +91,8 @@ class MissionStore {
     const deployment = deploymentResult.service?.deployments?.edges?.[0]?.node
 
     if (deployment?.id) {
-      const logsResult = await sdk.GetDeploymentLogs({
-        deploymentId: deployment.id,
-        limit: 1000,
-      })
-
-      const logLines = (logsResult.deploymentLogs || []).map((log) => {
-        return JSON.stringify({
-          timestamp: log?.timestamp || new Date().toISOString(),
-          message: log?.message || "",
-          severity: log?.severity,
-        })
-      })
-      const finalLogsString = logLines.join("\n")
-      this.update(serviceId, { logs: finalLogsString })
+      const logLines = await fetchDeploymentLogs(sdk, deployment.id)
+      this.update(serviceId, { logs: logLines })
     }
 
     this.update(serviceId, { status: "expired" })

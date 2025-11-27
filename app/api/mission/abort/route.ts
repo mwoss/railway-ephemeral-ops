@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { withErrorHandler } from "@/lib/api-error-handler"
 import { logger } from "@/lib/logger"
 import { missionStore } from "@/lib/mission-store"
-import { createRailwayClient, getRailwayToken } from "@/lib/railway"
+import { createRailwayClient, fetchDeploymentLogs, getRailwayToken } from "@/lib/railway"
 import type { AbortMissionRequest } from "@/lib/types"
 
 async function abortMissionHandler(request: NextRequest) {
@@ -26,20 +26,8 @@ async function abortMissionHandler(request: NextRequest) {
     const deployment = deploymentResult.service?.deployments?.edges?.[0]?.node
 
     if (deployment?.id) {
-      const logsResult = await sdk.GetDeploymentLogs({
-        deploymentId: deployment.id,
-        limit: 1000,
-      })
-
-      const logLines = (logsResult.deploymentLogs || []).map((log) => {
-        return JSON.stringify({
-          timestamp: log?.timestamp || new Date().toISOString(),
-          message: log?.message || "",
-          severity: log?.severity,
-        })
-      })
-      const finalLogsString = logLines.join("\n")
-      missionStore.update(serviceId, { logs: finalLogsString })
+      const logLines = await fetchDeploymentLogs(sdk, deployment.id)
+      missionStore.update(serviceId, { logs: logLines })
     }
   } catch (logError) {
     logger.error({ serviceId, err: logError }, "Failed to capture logs")
