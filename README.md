@@ -113,7 +113,8 @@ moving this to a production-grade utility would require addressing several archi
   * Transition from purly in-memory background cleanup job, to reliable cleanup via persistent job store.
 
 * **Event-driven updates (reduce polling):**
-  * Replace `setInterval` client polling with GraphQL subscriptions for real-time log streaming.
+  * Replace `setInterval` client polling with GraphQL subscriptions for real-time log streaming. 
+  * For simplicity, we fetch first 1000 log lines. We could also paginate using `startDate` if not decided with streaming
   * Replace status sync mechanism with webhooks from Railway to push state changes (Success/Crash) instantly.
 
 * **Smooth UI via websockets:**

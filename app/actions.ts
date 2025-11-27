@@ -16,6 +16,45 @@ type ActionState<T> =
       details?: string
     }
 
+function parseLogs(logs: string) {
+  return logs
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => {
+      try {
+        return JSON.parse(line)
+      } catch {
+        return {
+          timestamp: new Date().toISOString(),
+          message: line,
+          severity: "INFO",
+        }
+      }
+    })
+}
+
+function getStoredLogs(serviceId: string): ActionState<MissionLogsResponse> {
+  const mission = missionStore.get(serviceId)
+
+  if (!mission || !mission.logs) {
+    return {
+      success: true,
+      data: {
+        logs: [],
+        isLive: false,
+      },
+    }
+  }
+
+  return {
+    success: true,
+    data: {
+      logs: parseLogs(mission.logs),
+      isLive: false,
+    },
+  }
+}
+
 export async function getMissionLogs(
   serviceId: string,
   status: string,
@@ -23,40 +62,7 @@ export async function getMissionLogs(
 ): Promise<ActionState<MissionLogsResponse>> {
   try {
     if (isMissionTerminated(status as MissionStatus)) {
-      const mission = missionStore.get(serviceId)
-
-      if (!mission || !mission.logs) {
-        return {
-          success: true,
-          data: {
-            logs: [],
-            isLive: false,
-          },
-        }
-      }
-
-      const logLines = mission.logs
-        .split("\n")
-        .filter(Boolean)
-        .map((line) => {
-          try {
-            return JSON.parse(line)
-          } catch {
-            return {
-              timestamp: new Date().toISOString(),
-              message: line,
-              severity: "INFO",
-            }
-          }
-        })
-
-      return {
-        success: true,
-        data: {
-          logs: logLines,
-          isLive: false,
-        },
-      }
+      return getStoredLogs(serviceId)
     }
 
     // For active missions, fetch live logs from Railway
@@ -65,7 +71,6 @@ export async function getMissionLogs(
 
     // Use the stored deployment ID if available, otherwise get the latest
     let targetDeploymentId = deploymentId
-
     if (!targetDeploymentId) {
       const deploymentResult = await sdk.GetLatestDeployment({ serviceId })
       targetDeploymentId = deploymentResult.service?.deployments?.edges?.[0]?.node?.id
@@ -89,13 +94,13 @@ export async function getMissionLogs(
 
     const logsResult = await sdk.GetDeploymentLogs({
       deploymentId: targetDeploymentId,
-      limit: 500,
+      limit: 1000,
     })
 
     const logs = (logsResult.deploymentLogs || []).map((log) => ({
-      timestamp: log?.timestamp || new Date().toISOString(),
-      message: log?.message || "",
-      severity: log?.severity,
+      timestamp: log.timestamp,
+      message: log.message,
+      severity: log.severity,
     }))
 
     return {
@@ -106,14 +111,9 @@ export async function getMissionLogs(
       },
     }
   } catch (error) {
-    let errorMessage = "Failed to fetch logs"
-    if (error instanceof Error) {
-      errorMessage = error.message
-    }
-
     return {
       success: false,
-      error: errorMessage,
+      error: error instanceof Error ? error.message : "Failed to fetch logs",
       details: error instanceof Error ? error.stack : undefined,
     }
   }
