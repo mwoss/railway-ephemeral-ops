@@ -8,7 +8,7 @@ import {
   getRailwayProjectId,
   getRailwayToken,
 } from "@/lib/railway"
-import type { Mission, StartMissionRequest } from "@/lib/types"
+import type { MissionHistoryItem, StartMissionRequest } from "@/lib/types"
 import { validateMissionInputs } from "@/lib/validation"
 
 async function startMissionHandler(request: NextRequest) {
@@ -70,7 +70,7 @@ async function startMissionHandler(request: NextRequest) {
     environmentId,
   })
 
-  const mission: Mission = {
+  const missionWithoutLogs: MissionHistoryItem = {
     serviceId,
     serviceName,
     status: "provisioning",
@@ -79,16 +79,15 @@ async function startMissionHandler(request: NextRequest) {
     timeRemaining: ttl !== null ? ttl * 60 * 1000 : null, // Convert TTL minutes to milliseconds
     image,
     command,
-    logs: null,
     deploymentId: deployment.serviceInstanceDeployV2,
   }
 
-  missionStore.set(mission)
-  logger.info({ serviceId, status: mission.status }, "Mission saved to history")
+  missionStore.set({ ...missionWithoutLogs, logs: null })
+  logger.info({ serviceId, status: missionWithoutLogs.status }, "Mission saved to history")
 
   return NextResponse.json({
     success: true,
-    mission,
+    mission: missionWithoutLogs,
   })
 }
 

@@ -1,13 +1,13 @@
 import { toast } from "sonner"
 import { useStartMission } from "@/lib/hooks/useMissions"
-import type { Mission } from "@/lib/types"
+import type { MissionHistoryItem } from "@/lib/types"
 import { validateMissionInputs } from "@/lib/validation"
 import { ConfigurationPanel } from "./ConfigurationPanel"
 
 interface ConfigurationModalProps {
   isOpen: boolean
   onClose: () => void
-  onMissionStarted: (mission: Mission) => void
+  onMissionStarted: (mission: MissionHistoryItem) => void
 }
 
 export function ConfigurationModal({ isOpen, onClose, onMissionStarted }: ConfigurationModalProps) {

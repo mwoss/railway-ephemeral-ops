@@ -1,11 +1,11 @@
 import { AlertCircle, Rocket } from "lucide-react"
-import type { Mission } from "@/lib/types"
+import type { MissionHistoryItem } from "@/lib/types"
 import { MissionCard } from "./MissionCard"
 
 interface CanvasViewProps {
-  missions: Mission[]
-  selectedMission: Mission | null
-  onSelectMission: (mission: Mission) => void
+  missions: MissionHistoryItem[]
+  selectedMission: MissionHistoryItem | null
+  onSelectMission: (mission: MissionHistoryItem) => void
   isError?: boolean
 }
 

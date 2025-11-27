@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import type {
   AbortMissionResponse,
-  Mission,
+  MissionHistoryItem,
   MissionLogsResponse,
   MissionStatus,
   StartMissionResponse,
@@ -15,7 +15,7 @@ export const missionKeys = {
     [...missionKeys.all, "logs", serviceId, status, deploymentId] as const,
 }
 
-async function fetchMissionHistory(): Promise<Mission[]> {
+async function fetchMissionHistory(): Promise<MissionHistoryItem[]> {
   const response = await fetch("/api/mission/history")
 
   if (!response.ok) {
@@ -35,7 +35,7 @@ async function startMission(params: {
   image: string
   command: string
   ttl: number | null
-}): Promise<Mission> {
+}): Promise<MissionHistoryItem> {
   const response = await fetch("/api/mission/start", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -109,7 +109,7 @@ async function fetchMissionLogs(
     params.append("deploymentId", deploymentId)
   }
 
-  const response = await fetch(`/api/mission/get-logs?${params.toString()}`)
+  const response = await fetch(`/api/mission/logs?${params.toString()}`)
 
   if (!response.ok) {
     throw new Error(`Failed to fetch logs: ${response.status} ${response.statusText}`)
@@ -139,7 +139,10 @@ export function useStartMission() {
   return useMutation({
     mutationFn: startMission,
     onSuccess: (newMission) => {
-      queryClient.setQueryData<Mission[]>(missionKeys.history(), (old = []) => [newMission, ...old])
+      queryClient.setQueryData<MissionHistoryItem[]>(missionKeys.history(), (old = []) => [
+        newMission,
+        ...old,
+      ])
       toast.success("Mission launched", {
         description: `Service ${newMission.serviceName} is now active`,
       })
@@ -158,7 +161,7 @@ export function useAbortMission() {
   return useMutation({
     mutationFn: abortMission,
     onSuccess: (_, serviceId) => {
-      queryClient.setQueryData<Mission[]>(missionKeys.history(), (old = []) =>
+      queryClient.setQueryData<MissionHistoryItem[]>(missionKeys.history(), (old = []) =>
         old.map((mission) =>
           mission.serviceId === serviceId ? { ...mission, status: "terminated" as const } : mission
         )
@@ -168,7 +171,7 @@ export function useAbortMission() {
       })
     },
     onError: (error: any, serviceId) => {
-      queryClient.setQueryData<Mission[]>(missionKeys.history(), (old = []) =>
+      queryClient.setQueryData<MissionHistoryItem[]>(missionKeys.history(), (old = []) =>
         old.map((mission) =>
           mission.serviceId === serviceId
             ? { ...mission, status: "cleanup_failed" as const }
@@ -189,7 +192,7 @@ export function useSyncMissionStatus() {
     mutationFn: syncMissionStatus,
     onSuccess: (result, serviceId) => {
       const { status, deploymentId, timeRemaining } = result
-      queryClient.setQueryData<Mission[]>(missionKeys.history(), (old = []) =>
+      queryClient.setQueryData<MissionHistoryItem[]>(missionKeys.history(), (old = []) =>
         old.map((mission) =>
           mission.serviceId === serviceId
             ? {

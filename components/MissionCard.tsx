@@ -1,13 +1,13 @@
 import { Activity, AlertCircle, Rocket, Skull } from "lucide-react"
-import type { Mission } from "@/lib/types"
+import type { MissionHistoryItem } from "@/lib/types"
 
 interface MissionCardProps {
-  mission: Mission
+  mission: MissionHistoryItem
   isSelected: boolean
   onClick: () => void
 }
 
-const getStatusConfig = (mission: Mission) => {
+const getStatusConfig = (mission: MissionHistoryItem) => {
   switch (mission.status) {
     case "active":
       return {
@@ -40,7 +40,7 @@ const getStatusConfig = (mission: Mission) => {
   }
 }
 
-const getTimeAgo = (mission: Mission) => {
+const getTimeAgo = (mission: MissionHistoryItem) => {
   const now = Date.now()
   const start = new Date(mission.startTime).getTime()
   const diff = now - start

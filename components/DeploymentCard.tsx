@@ -1,8 +1,8 @@
 import { formatDateTime } from "@/lib/date"
-import type { Mission, MissionStatus } from "@/lib/types"
+import type { MissionHistoryItem, MissionStatus } from "@/lib/types"
 
 interface DeploymentCardProps {
-  mission: Mission
+  mission: MissionHistoryItem
 }
 
 interface StatusConfig {

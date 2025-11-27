@@ -1,15 +1,15 @@
 import { AlertCircle, Clock } from "lucide-react"
 import { formatDate } from "@/lib/date"
-import type { Mission, MissionStatus } from "@/lib/types"
+import type { MissionHistoryItem, MissionStatus } from "@/lib/types"
 
 interface HistoryViewProps {
-  missions: Mission[]
-  onSelectMission: (mission: Mission) => void
+  missions: MissionHistoryItem[]
+  onSelectMission: (mission: MissionHistoryItem) => void
   isError?: boolean
 }
 
 interface HistoryTableRowProps {
-  mission: Mission
+  mission: MissionHistoryItem
   onSelect: () => void
 }
 

@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef } from "react"
 import { isMissionProvisioning } from "@/lib/mission"
-import type { Mission } from "@/lib/types"
+import type { MissionHistoryItem } from "@/lib/types"
 import { useSyncMissionStatus } from "./useMissions"
 
-export function useStatusSync(missions: Mission[]) {
+export function useStatusSync(missions: MissionHistoryItem[]) {
   const syncMutation = useSyncMissionStatus()
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 

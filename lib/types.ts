@@ -21,6 +21,8 @@ export interface Mission {
   error?: string
 }
 
+export type MissionHistoryItem = Omit<Mission, "logs">
+
 export interface StartMissionRequest {
   image: string
   command: string
@@ -30,7 +32,7 @@ export interface StartMissionRequest {
 export type StartMissionResponse =
   | {
       success: true
-      mission: Mission
+      mission: MissionHistoryItem
     }
   | {
       success: false

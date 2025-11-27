@@ -9,14 +9,14 @@ import { PageHeader } from "@/components/PageHeader"
 import { useMissionHistory } from "@/lib/hooks/useMissions"
 import { useStatusSync } from "@/lib/hooks/useStatusSync"
 import { isMissionActive } from "@/lib/mission"
-import type { Mission } from "@/lib/types"
+import type { MissionHistoryItem } from "@/lib/types"
 
 type ViewMode = "CANVAS" | "HISTORY"
 
 export default function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>("CANVAS")
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
-  const [selectedMission, setSelectedMission] = useState<Mission | null>(null)
+  const [selectedMission, setSelectedMission] = useState<MissionHistoryItem | null>(null)
 
   const { data: missions = [], isLoading, isError } = useMissionHistory()
 
@@ -40,7 +40,7 @@ export default function Home() {
     }
   }, [missions, selectedMission])
 
-  const handleSelectMission = (mission: Mission) => {
+  const handleSelectMission = (mission: MissionHistoryItem) => {
     setSelectedMission(mission)
   }
 

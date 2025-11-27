@@ -3,18 +3,18 @@ import { useState } from "react"
 import { toast } from "sonner"
 import { useAbortMission } from "@/lib/hooks/useMissions"
 import { isMissionActive } from "@/lib/mission"
-import type { Mission } from "@/lib/types"
+import type { MissionHistoryItem } from "@/lib/types"
 import { CountdownTimer } from "./CountdownTimer"
 import { DeploymentCard } from "./DeploymentCard"
 import { LogTerminal } from "./LogTerminal"
 
 interface InspectorPaneProps {
-  mission: Mission
+  mission: MissionHistoryItem
   onClose: () => void
 }
 
 interface InspectorHeaderProps {
-  mission: Mission
+  mission: MissionHistoryItem
   onClose: () => void
 }
 
@@ -24,14 +24,14 @@ interface TabNavigationProps {
 }
 
 interface DeploymentsTabProps {
-  mission: Mission
+  mission: MissionHistoryItem
   canAbort: boolean
   onAbort: () => void
   isAborting: boolean
 }
 
 interface ParametersTabProps {
-  mission: Mission
+  mission: MissionHistoryItem
 }
 
 interface AbortButtonProps {
