@@ -13,36 +13,7 @@ export function useMissionManager() {
   const startMissionMutation = useStartMission()
   const abortMissionMutation = useAbortMission()
 
-  useStatusSync(selectedMission)
-
-  // Background status sync for provisioning missions
-  useEffect(() => {
-    const provisioningMissions = missions.filter(
-      (m) => m.status === "provisioning" || m.status === "injecting"
-    )
-
-    if (provisioningMissions.length === 0) return
-
-    const interval = setInterval(() => {
-      provisioningMissions.forEach((mission) => {
-        fetch(`/api/mission/status/${mission.serviceId}`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.success && data.status !== mission.status) {
-              // Backend now handles updating history, just show toast if failed
-              if (data.status === "failed") {
-                toast.error("Mission Failed", {
-                  description: `${mission.serviceName} crashed. Check image and command.`,
-                })
-              }
-            }
-          })
-          .catch(() => {})
-      })
-    }, 3000)
-
-    return () => clearInterval(interval)
-  }, [missions])
+  useStatusSync(missions)
 
   useEffect(() => {
     if (selectedMission) {
@@ -110,7 +81,7 @@ export function useMissionManager() {
   }
 
   const activeMissions = missions.filter((m) => isMissionActive(m.status))
-  const archivedMissions = missions.filter((m) => !isMissionActive(m.status) && m.status !== "idle")
+  const archivedMissions = missions.filter((m) => !isMissionActive(m.status))
 
   return {
     missions,

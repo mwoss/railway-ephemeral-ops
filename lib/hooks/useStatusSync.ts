@@ -1,20 +1,21 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
+import { isMissionProvisioning } from "@/lib/mission"
 import type { Mission } from "@/lib/types"
 import { useSyncMissionStatus } from "./useMissions"
 
-export function useStatusSync(mission: Mission | null) {
+export function useStatusSync(missions: Mission[]) {
   const syncMutation = useSyncMissionStatus()
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
+  const provisioningServiceIds = useMemo(() => {
+    return missions
+      .filter((mission) => mission.serviceId && isMissionProvisioning(mission.status))
+      .map((mission) => mission.serviceId)
+      .sort()
+  }, [missions])
+
   useEffect(() => {
-    // Only sync if mission exists and is in provisioning/injecting state
-    if (!mission || !mission.serviceId) {
-      return
-    }
-
-    const shouldSync = mission.status === "provisioning" || mission.status === "injecting"
-
-    if (!shouldSync) {
+    if (provisioningServiceIds.length === 0) {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
         intervalRef.current = null
@@ -22,11 +23,14 @@ export function useStatusSync(mission: Mission | null) {
       return
     }
 
-    syncMutation.mutate(mission.serviceId)
+    for (const serviceId of provisioningServiceIds) {
+      syncMutation.mutate(serviceId)
+    }
 
-    // Set up polling interval (2 seconds)
     intervalRef.current = setInterval(() => {
-      syncMutation.mutate(mission.serviceId)
+      for (const serviceId of provisioningServiceIds) {
+        syncMutation.mutate(serviceId)
+      }
     }, 2000)
 
     return () => {
@@ -35,7 +39,7 @@ export function useStatusSync(mission: Mission | null) {
         intervalRef.current = null
       }
     }
-  }, [mission?.serviceId, mission?.status])
+  }, [provisioningServiceIds])
 
   return syncMutation
 }
