@@ -42,20 +42,7 @@ export function useMissionManager() {
       setSelectedMission(mission)
       return true
     } catch (error) {
-      const errorMission: Mission = {
-        serviceId: `error-${Date.now()}`,
-        serviceName: "Error",
-        status: "error",
-        startTime: Date.now(),
-        ttl,
-        timeRemaining: null,
-        image,
-        command,
-        logs: null,
-        deploymentId: null,
-        error: error instanceof Error ? error.message : "Unknown error",
-      }
-      setSelectedMission(errorMission)
+      toast.error("Couldn't start a new mission due to unknown error")
       return false
     }
   }
@@ -65,14 +52,12 @@ export function useMissionManager() {
 
     try {
       await abortMissionMutation.mutateAsync(selectedMission.serviceId)
-
-      const terminatedMission: Mission = {
+      setSelectedMission({
         ...selectedMission,
         status: "terminated",
-      }
-      setSelectedMission(terminatedMission)
+      })
     } catch (error) {
-      // Silently fail abort
+      toast.error("Couldn't abort a mission due to unknown error")
     }
   }
 
