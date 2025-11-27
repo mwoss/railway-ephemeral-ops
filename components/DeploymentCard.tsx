@@ -1,5 +1,5 @@
 import { formatDateTime } from "@/lib/date"
-import type { Mission } from "@/lib/types"
+import type { Mission, MissionStatus } from "@/lib/types"
 
 interface DeploymentCardProps {
   mission: Mission
@@ -11,49 +11,49 @@ interface StatusConfig {
   label: string
 }
 
-const getStatusConfig = (status: Mission["status"]): StatusConfig => {
+const getStatusConfig = (status: MissionStatus): StatusConfig => {
   switch (status) {
     case "active":
       return {
         badge: "ACTIVE",
         badgeColor: "bg-[#73C09B] text-[#161D1A]",
-        label: "Running",
+        label: "Deployment is running and healthy",
       }
     case "provisioning":
       return {
         badge: "BUILDING",
         badgeColor: "bg-[#dfaf2a] text-[#3d3214]",
-        label: "Building",
+        label: "Deployment is being provisioned",
       }
     case "failed":
       return {
         badge: "FAILED",
         badgeColor: "bg-[#b62d2b] text-white",
-        label: "Crashed",
+        label: "Deployment crashed during runtime",
       }
     case "cleanup_failed":
       return {
         badge: "FAILED",
         badgeColor: "bg-[#b62d2b] text-white",
-        label: "Cleanup Failed",
+        label: "Failed to clean up resources",
       }
     case "expired":
       return {
         badge: "EXPIRED",
         badgeColor: "bg-gray-600 text-white",
-        label: "Expired",
+        label: "Deployment TTL has expired",
       }
     case "terminated":
       return {
         badge: "TERMINATED",
         badgeColor: "bg-gray-500 text-white",
-        label: "Terminated",
+        label: "Deployment was manually stopped",
       }
     default:
       return {
         badge: "ERROR",
         badgeColor: "bg-[#b62d2b] text-white",
-        label: status,
+        label: "Unknown deployment error",
       }
   }
 }
