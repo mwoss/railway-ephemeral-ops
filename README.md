@@ -117,6 +117,9 @@ moving this to a production-grade utility would require addressing several archi
   * For simplicity, we fetch first 1000 log lines. We could also paginate using `startDate` if not decided with streaming
   * Replace status sync mechanism with webhooks from Railway to push state changes (Success/Crash) instantly.
 
+* **Dedicated logs API:**
+  * Connected with above point. Currently, logs are fetched with mission history that may cause a huge network overhead. Logs should be fetched only when accessed.
+
 * **Smooth UI via websockets:**
   * Replace all frontend polling with bidirectional communication using websockets for real-time updates and smooth user experience.
 
