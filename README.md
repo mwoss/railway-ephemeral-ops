@@ -122,6 +122,9 @@ moving this to a production-grade utility would require addressing several archi
 * **Static Asset CDN:**
   * Offload static assets (Next.js build files) to a CDN rather than serving them via the Node.js runtime, ensuring better scalability under load.
 
+* **Use error codes to communicate about errors with client side:**
+  * Currently, messages are passed as they are making it hard to distinguish errors on frontend and would make difficult to handle translations.
+
 ### New product features ✨
 
 * **Smart "sentinel" auto-shutdown:**
