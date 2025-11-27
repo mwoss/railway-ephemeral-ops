@@ -1,22 +1,33 @@
+import { toast } from "sonner"
+import { useStartMission } from "@/lib/hooks/useMissions"
+import type { Mission } from "@/lib/types"
+import { validateMissionInputs } from "@/lib/validation"
 import { ConfigurationPanel } from "./ConfigurationPanel"
 
 interface ConfigurationModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (image: string, command: string, ttl: number | null) => Promise<boolean>
-  isLoading: boolean
+  onMissionStarted: (mission: Mission) => void
 }
 
-export function ConfigurationModal({
-  isOpen,
-  onClose,
-  onSubmit,
-  isLoading,
-}: ConfigurationModalProps) {
+export function ConfigurationModal({ isOpen, onClose, onMissionStarted }: ConfigurationModalProps) {
+  const startMissionMutation = useStartMission()
+
   const handleSubmit = async (image: string, command: string, ttl: number | null) => {
-    const success = await onSubmit(image, command, ttl)
-    if (success) {
+    const validation = validateMissionInputs(image, command, ttl)
+    if (!validation.isValid) {
+      toast.error("Validation Failed", {
+        description: validation.error,
+      })
+      return
+    }
+
+    try {
+      const mission = await startMissionMutation.mutateAsync({ image, command, ttl })
+      onMissionStarted(mission)
       onClose()
+    } catch (error) {
+      toast.error("Couldn't start a new mission due to unknown error")
     }
   }
 
@@ -34,7 +45,11 @@ export function ConfigurationModal({
       }}
     >
       <div className="w-96 bg-[#191622] border border-[#33323E] rounded-xl p-6">
-        <ConfigurationPanel onSubmit={handleSubmit} isLoading={isLoading} onClose={onClose} />
+        <ConfigurationPanel
+          onSubmit={handleSubmit}
+          isLoading={startMissionMutation.isPending}
+          onClose={onClose}
+        />
       </div>
     </div>
   )

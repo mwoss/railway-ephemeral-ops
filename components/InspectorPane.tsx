@@ -1,5 +1,7 @@
 import { Infinity, Loader2, Skull, X } from "lucide-react"
 import { useState } from "react"
+import { toast } from "sonner"
+import { useAbortMission } from "@/lib/hooks/useMissions"
 import { isMissionActive } from "@/lib/mission"
 import type { Mission } from "@/lib/types"
 import { CountdownTimer } from "./CountdownTimer"
@@ -9,8 +11,6 @@ import { LogTerminal } from "./LogTerminal"
 interface InspectorPaneProps {
   mission: Mission
   onClose: () => void
-  onAbort: () => void
-  isAborting: boolean
 }
 
 interface InspectorHeaderProps {
@@ -161,9 +161,20 @@ function ParametersTab({ mission }: ParametersTabProps) {
   )
 }
 
-export function InspectorPane({ mission, onClose, onAbort, isAborting }: InspectorPaneProps) {
+export function InspectorPane({ mission, onClose }: InspectorPaneProps) {
   const [activeTab, setActiveTab] = useState<"deployments" | "parameters">("deployments")
+  const abortMissionMutation = useAbortMission()
   const canAbort = isMissionActive(mission.status)
+
+  const handleAbort = async () => {
+    if (!mission.serviceId) return
+
+    try {
+      await abortMissionMutation.mutateAsync(mission.serviceId)
+    } catch (error) {
+      toast.error("Couldn't abort a mission due to unknown error")
+    }
+  }
 
   return (
     <div className="w-[600px] border-l border-[#33323E] bg-[#191622] flex flex-col h-screen">
@@ -177,8 +188,8 @@ export function InspectorPane({ mission, onClose, onAbort, isAborting }: Inspect
           <DeploymentsTab
             mission={mission}
             canAbort={canAbort}
-            onAbort={onAbort}
-            isAborting={isAborting}
+            onAbort={handleAbort}
+            isAborting={abortMissionMutation.isPending}
           />
         )}
         {activeTab === "parameters" && <ParametersTab mission={mission} />}

@@ -1,30 +1,48 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { CanvasView } from "@/components/CanvasView"
 import { ConfigurationModal } from "@/components/ConfigurationModal"
 import { HistoryView } from "@/components/HistoryView"
 import { InspectorPane } from "@/components/InspectorPane"
 import { PageHeader } from "@/components/PageHeader"
-import { useMissionManager } from "@/lib/hooks/useMissionManager"
+import { useMissionHistory } from "@/lib/hooks/useMissions"
+import { useStatusSync } from "@/lib/hooks/useStatusSync"
+import { isMissionActive } from "@/lib/mission"
+import type { Mission } from "@/lib/types"
 
 type ViewMode = "CANVAS" | "HISTORY"
 
 export default function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>("CANVAS")
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false)
+  const [selectedMission, setSelectedMission] = useState<Mission | null>(null)
 
-  const {
-    activeMissions,
-    archivedMissions,
-    selectedMission,
-    isStarting,
-    isAborting,
-    handleStartMission,
-    handleAbortMission,
-    handleSelectMission,
-    setSelectedMission,
-  } = useMissionManager()
+  const { data: missions = [] } = useMissionHistory()
+
+  const activeMissions = useMemo(
+    () => missions.filter((m) => isMissionActive(m.status)),
+    [missions]
+  )
+  const archivedMissions = useMemo(
+    () => missions.filter((m) => !isMissionActive(m.status)),
+    [missions]
+  )
+  // Sync status for provisioning missions
+  useStatusSync(missions)
+
+  useEffect(() => {
+    if (selectedMission) {
+      const updatedMission = missions.find((m) => m.serviceId === selectedMission.serviceId)
+      if (updatedMission) {
+        setSelectedMission(updatedMission)
+      }
+    }
+  }, [missions, selectedMission])
+
+  const handleSelectMission = (mission: Mission) => {
+    setSelectedMission(mission)
+  }
 
   return (
     <div className="h-screen w-screen flex bg-[#14111D] overflow-hidden text-white">
@@ -42,8 +60,7 @@ export default function Home() {
           <ConfigurationModal
             isOpen={isConfigModalOpen}
             onClose={() => setIsConfigModalOpen(false)}
-            onSubmit={handleStartMission}
-            isLoading={isStarting}
+            onMissionStarted={setSelectedMission}
           />
           {viewMode === "CANVAS" && (
             <CanvasView
@@ -58,12 +75,7 @@ export default function Home() {
         </div>
       </div>
       {selectedMission && (
-        <InspectorPane
-          mission={selectedMission}
-          onClose={() => setSelectedMission(null)}
-          onAbort={handleAbortMission}
-          isAborting={isAborting}
-        />
+        <InspectorPane mission={selectedMission} onClose={() => setSelectedMission(null)} />
       )}
     </div>
   )
