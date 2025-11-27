@@ -1,7 +1,5 @@
 export type MissionStatus =
-  | "idle"
   | "provisioning"
-  | "injecting"
   | "active"
   | "terminated"
   | "cleanup_failed"

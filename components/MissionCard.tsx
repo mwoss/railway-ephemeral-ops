@@ -1,4 +1,4 @@
-import { Activity, AlertCircle, Rocket, Skull, Zap } from "lucide-react"
+import { Activity, AlertCircle, Rocket, Skull } from "lucide-react"
 import type { Mission } from "@/lib/types"
 
 interface MissionCardProps {
@@ -22,13 +22,6 @@ const getStatusConfig = (mission: Mission) => {
         label: "Provisioning",
         color: "bg-[#dfaf2a]",
         textColor: "text-[#dfaf2a]",
-      }
-    case "injecting":
-      return {
-        icon: Zap,
-        label: "Injecting",
-        color: "bg-purple-500",
-        textColor: "text-purple-400",
       }
     case "terminated":
       return {

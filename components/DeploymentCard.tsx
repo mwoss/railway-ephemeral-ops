@@ -25,12 +25,6 @@ const getStatusConfig = (status: Mission["status"]): StatusConfig => {
         badgeColor: "bg-[#dfaf2a] text-[#3d3214]",
         label: "Building",
       }
-    case "injecting":
-      return {
-        badge: "BUILDING",
-        badgeColor: "bg-[#dfaf2a] text-[#3d3214]",
-        label: "Injecting",
-      }
     case "failed":
       return {
         badge: "FAILED",
