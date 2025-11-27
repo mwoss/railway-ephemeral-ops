@@ -116,14 +116,14 @@ function DeploymentsTab({ mission, canAbort, onAbort, isAborting }: DeploymentsT
       )}
       {canAbort && <AbortButton onAbort={onAbort} isAborting={isAborting} />}
       {mission.serviceId && (
-        <div className="mt-4">
-          <h3 className="text-sm font-medium text-white mb-3">Container Logs</h3>
+        <>
+          <div className="border-t border-[#33323E] my-4" />
           <LogTerminal
             serviceId={mission.serviceId}
             status={mission.status}
             deploymentId={mission.deploymentId}
           />
-        </div>
+        </>
       )}
     </>
   )
