@@ -1,6 +1,6 @@
 import { Clock } from "lucide-react"
-import type { Mission } from "@/lib/types"
-import { formatDate } from "@/lib/utils"
+import { formatDate } from "@/lib/date"
+import type { Mission, MissionStatus } from "@/lib/types"
 
 interface HistoryViewProps {
   missions: Mission[]
@@ -12,16 +12,16 @@ interface HistoryTableRowProps {
   onSelect: () => void
 }
 
-function HistoryTableRow({ mission, onSelect }: HistoryTableRowProps) {
-  const getStatusConfig = () => {
-    if (mission.status === "expired") return { color: "bg-gray-500", label: "Expired" }
-    if (mission.status === "failed" || mission.status === "cleanup_failed") {
-      return { color: "bg-[#b62d2b]", label: "Failed" }
-    }
-    return { color: "bg-gray-500", label: "Terminated" }
+function getMissionStatusConfig(status: MissionStatus) {
+  if (status === "expired") return { color: "bg-gray-500", label: "Expired" }
+  if (status === "failed" || status === "cleanup_failed") {
+    return { color: "bg-[#b62d2b]", label: "Failed" }
   }
+  return { color: "bg-gray-500", label: "Terminated" }
+}
 
-  const statusConfig = getStatusConfig()
+function HistoryTableRow({ mission, onSelect }: HistoryTableRowProps) {
+  const statusConfig = getMissionStatusConfig(mission.status)
   const duration = mission.ttl === null ? "∞" : mission.ttl ? `${mission.ttl}m` : "N/A"
 
   return (

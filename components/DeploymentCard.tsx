@@ -1,5 +1,5 @@
+import { formatDateTime } from "@/lib/date"
 import type { Mission } from "@/lib/types"
-import { formatDateTime } from "@/lib/utils"
 
 interface DeploymentCardProps {
   mission: Mission

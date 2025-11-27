@@ -3,6 +3,7 @@
 import { Loader2, Terminal } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { getMissionLogs } from "@/app/actions"
+import { isMissionActive, isMissionTerminated } from "@/lib/mission"
 import type { LogLine, MissionStatus } from "@/lib/types"
 
 interface LogTerminalProps {
@@ -20,7 +21,6 @@ interface LogContentProps {
   logs: LogLine[]
   isLoading: boolean
   error: string | null
-  bottomRef: React.RefObject<HTMLDivElement | null>
 }
 
 interface LogEntryProps {
@@ -49,7 +49,7 @@ const getSeverityColor = (severity?: string | null) => {
   }
 }
 
-const formatTimestamp = (timestamp: string) => {
+const formatLogTimestamp = (timestamp: string) => {
   try {
     const date = new Date(timestamp)
     return date.toLocaleTimeString("en-US", {
@@ -117,7 +117,9 @@ function EmptyState() {
 function LogEntry({ log, index }: LogEntryProps) {
   return (
     <div key={index} className="flex gap-3 hover:bg-white/5 px-2 py-1 rounded">
-      <span className="text-gray-600 select-none shrink-0">{formatTimestamp(log.timestamp)}</span>
+      <span className="text-gray-600 select-none shrink-0">
+        {formatLogTimestamp(log.timestamp)}
+      </span>
       {log.severity && (
         <span className={`${getSeverityColor(log.severity)} select-none shrink-0 w-12`}>
           [{log.severity}]
@@ -128,7 +130,7 @@ function LogEntry({ log, index }: LogEntryProps) {
   )
 }
 
-function LogContent({ logs, isLoading, error, bottomRef }: LogContentProps) {
+function LogContent({ logs, isLoading, error }: LogContentProps) {
   if (isLoading && logs.length === 0) {
     return <LoadingState />
   }
@@ -146,7 +148,6 @@ function LogContent({ logs, isLoading, error, bottomRef }: LogContentProps) {
       {logs.map((log, index) => (
         <LogEntry key={index} log={log} index={index} />
       ))}
-      <div ref={bottomRef} />
     </div>
   )
 }
@@ -167,7 +168,6 @@ export function LogTerminal({ serviceId, status, deploymentId }: LogTerminalProp
   const [isLive, setIsLive] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const bottomRef = useRef<HTMLDivElement>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const fetchLogs = async () => {
@@ -202,12 +202,8 @@ export function LogTerminal({ serviceId, status, deploymentId }: LogTerminalProp
     }
   }
 
-  // Set up polling for live logs
   useEffect(() => {
-    const isTerminated =
-      status === "terminated" || status === "error" || status === "cleanup_failed"
-
-    if (isTerminated) {
+    if (isMissionTerminated(status)) {
       // For terminated missions, only fetch once (stored logs)
       void fetchLogs()
       return
@@ -215,8 +211,7 @@ export function LogTerminal({ serviceId, status, deploymentId }: LogTerminalProp
 
     void fetchLogs()
 
-    const shouldPoll = status === "active" || status === "provisioning" || status === "injecting"
-    if (shouldPoll) {
+    if (isMissionActive(status)) {
       intervalRef.current = setInterval(fetchLogs, 5000)
     }
 
@@ -231,7 +226,7 @@ export function LogTerminal({ serviceId, status, deploymentId }: LogTerminalProp
     <div className="bg-[#14111D] border border-[#33323E] rounded-lg overflow-hidden">
       <TerminalHeader isLive={isLive} hasLogs={logs.length > 0} />
       <div className="bg-[#14111D] p-4 h-96 overflow-y-auto font-mono text-xs">
-        <LogContent logs={logs} isLoading={isLoading} error={error} bottomRef={bottomRef} />
+        <LogContent logs={logs} isLoading={isLoading} error={error} />
       </div>
       <TerminalFooter logCount={logs.length} isLive={isLive} />
     </div>

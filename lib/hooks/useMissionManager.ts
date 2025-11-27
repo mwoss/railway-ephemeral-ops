@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import { isMissionActive } from "../mission"
 import type { Mission } from "../types"
 import { validateMissionInputs } from "../validation"
 import { useAbortMission, useMissionHistory, useStartMission } from "./useMissions"
@@ -108,17 +109,8 @@ export function useMissionManager() {
     setSelectedMission(mission)
   }
 
-  const activeMissions = missions.filter(
-    (m) => m.status === "active" || m.status === "provisioning" || m.status === "injecting"
-  )
-
-  const archivedMissions = missions.filter(
-    (m) =>
-      m.status === "expired" ||
-      m.status === "failed" ||
-      m.status === "terminated" ||
-      m.status === "cleanup_failed"
-  )
+  const activeMissions = missions.filter((m) => isMissionActive(m.status))
+  const archivedMissions = missions.filter((m) => !isMissionActive(m.status) && m.status !== "idle")
 
   return {
     missions,

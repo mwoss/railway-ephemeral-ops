@@ -37,7 +37,7 @@ function TTLDisplay({ timeRemaining, ttl }: TTLDisplayProps) {
   const seconds = Math.floor((timeRemaining % 60000) / 1000)
   const percentage = (timeRemaining / (ttl * 60 * 1000)) * 100
 
-  const getColorClass = (prefix: 'text' | 'bg') => {
+  const getColorClass = (prefix: "text" | "bg") => {
     if (percentage > 50) return `${prefix}-[#73C09B]`
     if (percentage > 25) return `${prefix}-[#dfaf2a]`
     return `${prefix}-[#b62d2b]`
@@ -50,13 +50,13 @@ function TTLDisplay({ timeRemaining, ttl }: TTLDisplayProps) {
         <span className="font-mono text-sm uppercase tracking-wider">Time Remaining</span>
       </div>
 
-      <div className={`font-mono text-4xl font-bold ${getColorClass('text')}`}>
+      <div className={`font-mono text-4xl font-bold ${getColorClass("text")}`}>
         {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
       </div>
 
       <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
         <div
-          className={`h-full transition-all duration-1000 ${getColorClass('bg')}`}
+          className={`h-full transition-all duration-1000 ${getColorClass("bg")}`}
           style={{ width: `${percentage}%` }}
         />
       </div>
@@ -68,14 +68,6 @@ export function CountdownTimer({ timeRemaining: serverTimeRemaining, ttl }: Coun
   const [localTimeRemaining, setLocalTimeRemaining] = useState<number>(serverTimeRemaining ?? 0)
   const isManualMode = ttl === null
 
-  // Sync with server-provided timeRemaining when it changes
-  useEffect(() => {
-    if (serverTimeRemaining !== null) {
-      setLocalTimeRemaining(serverTimeRemaining)
-    }
-  }, [serverTimeRemaining])
-
-  // Decrement locally every second
   useEffect(() => {
     if (isManualMode) return
 

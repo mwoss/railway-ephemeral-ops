@@ -1,5 +1,6 @@
 import { Infinity, Loader2, Skull, X } from "lucide-react"
 import { useState } from "react"
+import { isMissionActive } from "@/lib/mission"
 import type { Mission } from "@/lib/types"
 import { CountdownTimer } from "./CountdownTimer"
 import { DeploymentCard } from "./DeploymentCard"
@@ -103,10 +104,7 @@ function AbortButton({ onAbort, isAborting }: AbortButtonProps) {
 }
 
 function DeploymentsTab({ mission, canAbort, onAbort, isAborting }: DeploymentsTabProps) {
-  const showTimer =
-    mission.status === "active" ||
-    mission.status === "provisioning" ||
-    mission.status === "injecting"
+  const showTimer = isMissionActive(mission.status)
 
   return (
     <>
@@ -165,10 +163,7 @@ function ParametersTab({ mission }: ParametersTabProps) {
 
 export function InspectorPane({ mission, onClose, onAbort, isAborting }: InspectorPaneProps) {
   const [activeTab, setActiveTab] = useState<"deployments" | "parameters">("deployments")
-  const canAbort =
-    mission.status === "active" ||
-    mission.status === "provisioning" ||
-    mission.status === "injecting"
+  const canAbort = isMissionActive(mission.status)
 
   return (
     <div className="w-[600px] border-l border-[#33323E] bg-[#191622] flex flex-col h-screen">

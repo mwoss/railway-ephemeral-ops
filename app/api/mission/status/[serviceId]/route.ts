@@ -74,9 +74,10 @@ async function syncStatusHandler(
   }
 
   // Calculate timeRemaining server-side to avoid client/server clock sync issues
-  const timeRemaining = mission.ttl !== null
-    ? Math.max(0, mission.startTime + mission.ttl * 60 * 1000 - Date.now())
-    : null
+  const timeRemaining =
+    mission.ttl !== null
+      ? Math.max(0, mission.startTime + mission.ttl * 60 * 1000 - Date.now())
+      : null
 
   const updated = missionStore.update(serviceId, {
     status,

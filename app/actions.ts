@@ -1,8 +1,9 @@
 "use server"
 
+import { isMissionActive, isMissionTerminated } from "@/lib/mission"
 import { missionStore } from "@/lib/mission-store"
 import { createRailwayClient, getRailwayToken } from "@/lib/railway"
-import type { MissionLogsResponse } from "@/lib/types"
+import type { MissionLogsResponse, MissionStatus } from "@/lib/types"
 
 type ActionState<T> =
   | {
@@ -21,7 +22,7 @@ export async function getMissionLogs(
   deploymentId?: string | null
 ): Promise<ActionState<MissionLogsResponse>> {
   try {
-    if (status === "terminated" || status === "error" || status === "cleanup_failed") {
+    if (isMissionTerminated(status as MissionStatus)) {
       const mission = missionStore.get(serviceId)
 
       if (!mission || !mission.logs) {
@@ -101,7 +102,7 @@ export async function getMissionLogs(
       success: true,
       data: {
         logs,
-        isLive: status === "active" || status === "provisioning" || status === "injecting",
+        isLive: isMissionActive(status as MissionStatus),
       },
     }
   } catch (error) {
