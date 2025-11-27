@@ -3,6 +3,7 @@ import { toast } from "sonner"
 import type {
   AbortMissionResponse,
   Mission,
+  MissionLogsResponse,
   MissionStatus,
   StartMissionResponse,
 } from "@/lib/types"
@@ -10,6 +11,8 @@ import type {
 export const missionKeys = {
   all: ["missions"] as const,
   history: () => [...missionKeys.all, "history"] as const,
+  logs: (serviceId: string, status: string, deploymentId?: string | null) =>
+    [...missionKeys.all, "logs", serviceId, status, deploymentId] as const,
 }
 
 async function fetchMissionHistory(): Promise<Mission[]> {
@@ -90,6 +93,35 @@ async function syncMissionStatus(
     deploymentId: data.deploymentId,
     timeRemaining: data.timeRemaining,
   }
+}
+
+async function fetchMissionLogs(
+  serviceId: string,
+  status: string,
+  deploymentId?: string | null
+): Promise<MissionLogsResponse> {
+  const params = new URLSearchParams({
+    serviceId,
+    status,
+  })
+
+  if (deploymentId) {
+    params.append("deploymentId", deploymentId)
+  }
+
+  const response = await fetch(`/api/mission/get-logs?${params.toString()}`)
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch logs: ${response.status} ${response.statusText}`)
+  }
+
+  const data = await response.json()
+
+  if (!data.success) {
+    throw new Error(data.error || "Failed to fetch logs")
+  }
+
+  return data.data
 }
 
 export function useMissionHistory() {
@@ -180,6 +212,22 @@ export function useSyncMissionStatus() {
       toast.error("Launch failed", {
         description: "Container crashed due to unknown error.",
       })
+    },
+  })
+}
+
+export function useMissionLogs(
+  serviceId: string,
+  status: MissionStatus,
+  deploymentId?: string | null
+) {
+  return useQuery({
+    queryKey: missionKeys.logs(serviceId, status, deploymentId),
+    queryFn: () => fetchMissionLogs(serviceId, status, deploymentId),
+    staleTime: 5 * 1000,
+    refetchInterval: (query) => {
+      const data = query.state.data
+      return data?.isLive ? 5 * 1000 : false
     },
   })
 }

@@ -1,9 +1,7 @@
 "use client"
 
 import { Loader2, Terminal } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
-import { getMissionLogs } from "@/app/actions"
-import { isMissionActive, isMissionTerminated } from "@/lib/mission"
+import { useMissionLogs } from "@/lib/hooks/useMissions"
 import type { LogLine, MissionStatus } from "@/lib/types"
 
 interface LogTerminalProps {
@@ -164,69 +162,17 @@ function TerminalFooter({ logCount, isLive }: TerminalFooterProps) {
 }
 
 export function LogTerminal({ serviceId, status, deploymentId }: LogTerminalProps) {
-  const [logs, setLogs] = useState<LogLine[]>([])
-  const [isLive, setIsLive] = useState(true)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const { data, isLoading, error } = useMissionLogs(serviceId, status, deploymentId)
 
-  const fetchLogs = async () => {
-    try {
-      const result = await getMissionLogs(serviceId, status, deploymentId)
-
-      if (result.success) {
-        setLogs(result.data.logs)
-        setIsLive(result.data.isLive)
-        setError(null)
-
-        // Stop polling if mission is no longer live
-        if (!result.data.isLive && intervalRef.current) {
-          clearInterval(intervalRef.current)
-          intervalRef.current = null
-        }
-      } else {
-        setError(result.error)
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current)
-          intervalRef.current = null
-        }
-      }
-    } catch (err) {
-      setError("Failed to fetch logs")
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (isMissionTerminated(status)) {
-      // For terminated missions, only fetch once (stored logs)
-      void fetchLogs()
-      return
-    }
-
-    void fetchLogs()
-
-    if (isMissionActive(status)) {
-      intervalRef.current = setInterval(fetchLogs, 5000)
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-      }
-    }
-  }, [serviceId, status])
+  const logs = data?.logs ?? []
+  const isLive = data?.isLive ?? false
+  const errorMessage = error ? error.message : null
 
   return (
     <div className="bg-[#14111D] border border-[#33323E] rounded-lg overflow-hidden">
       <TerminalHeader isLive={isLive} hasLogs={logs.length > 0} />
       <div className="bg-[#14111D] p-4 h-96 overflow-y-auto font-mono text-xs">
-        <LogContent logs={logs} isLoading={isLoading} error={error} />
+        <LogContent logs={logs} isLoading={isLoading} error={errorMessage} />
       </div>
       <TerminalFooter logCount={logs.length} isLive={isLive} />
     </div>
