@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import type { AbortMissionResponse, Mission, StartMissionResponse } from "@/lib/types"
+import type {
+  AbortMissionResponse,
+  Mission,
+  MissionStatus,
+  StartMissionResponse,
+} from "@/lib/types"
 
 export const missionKeys = {
   all: ["missions"] as const,
@@ -9,6 +14,11 @@ export const missionKeys = {
 
 async function fetchMissionHistory(): Promise<Mission[]> {
   const response = await fetch("/api/mission/history")
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch mission history: ${response.status} ${response.statusText}`)
+  }
+
   const data = await response.json()
 
   if (!data.success) {
@@ -29,9 +39,13 @@ async function startMission(params: {
     body: JSON.stringify(params),
   })
 
+  if (!response.ok) {
+    throw new Error(`Failed to start mission: ${response.status} ${response.statusText}`)
+  }
+
   const data: StartMissionResponse = await response.json()
 
-  if (!data.success || !data.mission) {
+  if (!data.success) {
     throw new Error(data.error || "Failed to start mission")
   }
 
@@ -45,10 +59,36 @@ async function abortMission(serviceId: string): Promise<void> {
     body: JSON.stringify({ serviceId }),
   })
 
+  if (!response.ok) {
+    throw new Error(`Failed to abort mission: ${response.status} ${response.statusText}`)
+  }
+
   const data: AbortMissionResponse = await response.json()
 
   if (!data.success) {
     throw new Error(data.error || "Failed to abort mission")
+  }
+}
+
+async function syncMissionStatus(
+  serviceId: string
+): Promise<{ status: string; deploymentId?: string; timeRemaining: number | null }> {
+  const response = await fetch(`/api/mission/status/${serviceId}`)
+
+  if (!response.ok) {
+    throw new Error(`Failed to sync mission status: ${response.status} ${response.statusText}`)
+  }
+
+  const data = await response.json()
+
+  if (!data.success) {
+    throw new Error(data.error || "Failed to sync status")
+  }
+
+  return {
+    status: data.status,
+    deploymentId: data.deploymentId,
+    timeRemaining: data.timeRemaining,
   }
 }
 
@@ -68,17 +108,13 @@ export function useStartMission() {
     mutationFn: startMission,
     onSuccess: (newMission) => {
       queryClient.setQueryData<Mission[]>(missionKeys.history(), (old = []) => [newMission, ...old])
-
-      toast.success("Mission Launched", {
+      toast.success("Mission launched", {
         description: `Service ${newMission.serviceName} is now active`,
       })
     },
     onError: (error: any) => {
-      const errorMessage = error?.message || "Failed to start mission"
-      const errorDetails = error?.details || error?.response?.errors?.[0]?.message
-
-      toast.error(errorMessage, {
-        description: errorDetails,
+      toast.error("Failed to start mission", {
+        description: error?.details || error?.response?.errors?.[0]?.message,
       })
     },
   })
@@ -95,8 +131,7 @@ export function useAbortMission() {
           mission.serviceId === serviceId ? { ...mission, status: "terminated" as const } : mission
         )
       )
-
-      toast.success("Mission Terminated", {
+      toast.success("Mission terminated", {
         description: "Service has been successfully deleted",
       })
     },
@@ -108,43 +143,11 @@ export function useAbortMission() {
             : mission
         )
       )
-
-      const errorMessage = error?.message || "Cleanup Failed"
-      const errorDetails = error?.details
-      const isRetryable = error?.isRetryable !== false
-
-      toast.error(errorMessage, {
-        description: errorDetails || "Failed to delete service. You can retry.",
-        action: isRetryable
-          ? {
-              label: "Retry",
-              onClick: () => {
-                // Trigger retry by calling the mutation again
-                // This will be handled by the component
-              },
-            }
-          : undefined,
+      toast.error(error?.message || "Cleanup failed", {
+        description: error?.details || "Failed to delete service.",
       })
     },
   })
-}
-
-async function syncMissionStatus(
-  serviceId: string
-): Promise<{ status: string; deploymentId?: string; timeRemaining: number | null }> {
-  const response = await fetch(`/api/mission/status/${serviceId}`)
-
-  const data = await response.json()
-
-  if (!data.success) {
-    throw new Error(data.error || "Failed to sync status")
-  }
-
-  return {
-    status: data.status,
-    deploymentId: data.deploymentId,
-    timeRemaining: data.timeRemaining,
-  }
 }
 
 export function useSyncMissionStatus() {
@@ -154,13 +157,12 @@ export function useSyncMissionStatus() {
     mutationFn: syncMissionStatus,
     onSuccess: (result, serviceId) => {
       const { status, deploymentId, timeRemaining } = result
-
       queryClient.setQueryData<Mission[]>(missionKeys.history(), (old = []) =>
         old.map((mission) =>
           mission.serviceId === serviceId
             ? {
                 ...mission,
-                status: status as Mission["status"],
+                status: status as MissionStatus,
                 deploymentId: deploymentId || mission.deploymentId,
                 timeRemaining,
               }
@@ -169,11 +171,15 @@ export function useSyncMissionStatus() {
       )
 
       if (status === "failed") {
-        toast.error("Launch Failed", {
+        toast.error("Launch failed", {
           description: "Container crashed. Check image name and command.",
         })
       }
     },
-    onError: () => {},
+    onError: () => {
+      toast.error("Launch failed", {
+        description: "Container crashed due to unknown error.",
+      })
+    },
   })
 }

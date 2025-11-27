@@ -16,7 +16,7 @@ export function ConfigurationModal({ isOpen, onClose, onMissionStarted }: Config
   const handleSubmit = async (image: string, command: string, ttl: number | null) => {
     const validation = validateMissionInputs(image, command, ttl)
     if (!validation.isValid) {
-      toast.error("Validation Failed", {
+      toast.error("Validation failed", {
         description: validation.error,
       })
       return

@@ -3,20 +3,7 @@ import { withErrorHandler } from "@/lib/api-error-handler"
 import { logger } from "@/lib/logger"
 import { missionStore } from "@/lib/mission-store"
 import { createRailwayClient, getRailwayToken } from "@/lib/railway"
-import type { MissionStatus } from "@/lib/types"
-
-type SyncStatusResponse =
-  | {
-      success: true
-      status: string
-      deploymentId: string
-      timeRemaining: number | null
-      shouldUpdate: boolean
-    }
-  | {
-      success: false
-      error: string
-    }
+import type { MissionStatus, SyncStatusResponse } from "@/lib/types"
 
 function mapRailwayStatusToMissionStatus(railwayStatus: string): MissionStatus {
   switch (railwayStatus) {

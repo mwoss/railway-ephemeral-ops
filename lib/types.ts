@@ -27,23 +27,43 @@ export interface StartMissionRequest {
   ttl: number | null
 }
 
-export interface StartMissionResponse {
-  success: boolean
-  mission?: Mission
-  error?: string
-  details?: string
-}
+export type StartMissionResponse =
+  | {
+      success: true
+      mission: Mission
+    }
+  | {
+      success: false
+      error: string
+      details?: string
+    }
 
 export interface AbortMissionRequest {
   serviceId: string
 }
 
-export interface AbortMissionResponse {
-  success: boolean
-  error?: string
-  details?: string
-  isRetryable?: boolean
-}
+export type AbortMissionResponse =
+  | {
+      success: true
+    }
+  | {
+      success: false
+      error: string
+      details?: string
+    }
+
+export type SyncStatusResponse =
+  | {
+      success: true
+      status: string
+      deploymentId: string
+      timeRemaining: number | null
+      shouldUpdate: boolean
+    }
+  | {
+      success: false
+      error: string
+    }
 
 export interface LogLine {
   timestamp: string
