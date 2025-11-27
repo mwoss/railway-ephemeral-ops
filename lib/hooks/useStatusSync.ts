@@ -6,6 +6,10 @@ import { useSyncMissionStatus } from "./useMissions"
 export function useStatusSync(missions: MissionHistoryItem[]) {
   const syncMutation = useSyncMissionStatus()
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const syncMutationRef = useRef(syncMutation)
+
+  // Keep mutation ref up to date
+  syncMutationRef.current = syncMutation
 
   const provisioningServiceIds = useMemo(() => {
     return missions
@@ -13,6 +17,8 @@ export function useStatusSync(missions: MissionHistoryItem[]) {
       .map((mission) => mission.serviceId)
       .sort()
   }, [missions])
+
+  const serviceIdsKey = provisioningServiceIds.join(",")
 
   useEffect(() => {
     if (provisioningServiceIds.length === 0) {
@@ -24,12 +30,13 @@ export function useStatusSync(missions: MissionHistoryItem[]) {
     }
 
     for (const serviceId of provisioningServiceIds) {
-      syncMutation.mutate(serviceId)
+      syncMutationRef.current.mutate(serviceId)
     }
 
+    // Set up interval - only recreate when service IDs change
     intervalRef.current = setInterval(() => {
       for (const serviceId of provisioningServiceIds) {
-        syncMutation.mutate(serviceId)
+        syncMutationRef.current.mutate(serviceId)
       }
     }, 2000)
 
@@ -39,7 +46,7 @@ export function useStatusSync(missions: MissionHistoryItem[]) {
         intervalRef.current = null
       }
     }
-  }, [provisioningServiceIds])
+  }, [serviceIdsKey])
 
   return syncMutation
 }
