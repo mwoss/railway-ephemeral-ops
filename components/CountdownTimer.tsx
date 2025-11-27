@@ -70,13 +70,15 @@ export function CountdownTimer({ timeRemaining: serverTimeRemaining, ttl }: Coun
 
   useEffect(() => {
     if (isManualMode) return
+    // Update local state when server value changes (e.g., switching missions)
+    setLocalTimeRemaining(serverTimeRemaining ?? 0)
 
     const interval = setInterval(() => {
       setLocalTimeRemaining((prev) => Math.max(0, prev - 1000))
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [isManualMode])
+  }, [isManualMode, serverTimeRemaining])
 
   if (isManualMode) return <ManualModeDisplay />
   return <TTLDisplay timeRemaining={localTimeRemaining} ttl={ttl} />
