@@ -88,7 +88,8 @@ Tests cover validation logic, mission store, and TTL calculations.
 2. Connect your GitHub repository
 3. Add environment variables:
    - `RAILWAY_API_TOKEN`
-   - `RAILWAY_PROJECT_ID` (optional)
+   - `RAILWAY_PROJECT_ID` and `RAILWAY_ENVIRONMENT_ID`
+     - Optionally as Railway provide those envs out of the box. Only if you want to overwrite them.
 4. Deploy!
 
 Railway should automatically detect Next.js and configure the build based on `railpack.json`.
